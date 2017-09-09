@@ -5,6 +5,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
+import android.view.DragEvent;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -75,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
                 return false;
             }
         });
+
 
 /*
         simpleExpandableListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
@@ -150,7 +152,8 @@ public class MainActivity extends AppCompatActivity {
         for (int ntask = 0; ntask < defaultTasks.length; ntask++){
             if (ntask < defDetailsAll.size()) {
                 for (int ntaskdet = 0; ntaskdet < defDetailsAll.get(ntask).length; ntaskdet++) {
-                    addTasktoExpList(defaultTasks[ntask], defDetailsAll.get(ntask)[ntaskdet], defTimes[ndelay]);
+                    addTasktoExpList(defaultTasks[ntask], defDetailsAll.get(ntask)[ntaskdet],
+                            defTimes[ndelay], -1, -1);
                     ndelay++;
                 }
             }
@@ -192,9 +195,9 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
-    private int addTasktoExpList(String taskName, String taskDetail, String delay){
+    private void addTasktoExpList(String taskName, String taskDetail, String delay, int at1, int at2){
 
-        int groupPosition = 0;
+        //int groupPosition = 0;
 
         //check the hash map if the group already exists
         GroupInfo headerInfo = detailsMap.get(taskName);
@@ -203,26 +206,32 @@ public class MainActivity extends AppCompatActivity {
             headerInfo = new GroupInfo();
             headerInfo.setTask(taskName);
             detailsMap.put(taskName, headerInfo);
-            allTaskList.add(headerInfo);
+            if (at1>=0) allTaskList.add(at1, headerInfo);
+            else  allTaskList.add(headerInfo);
         }
 
         //get the children for the group
         ArrayList<ChildInfo> detailsList = headerInfo.getDetailsList();
-        int listSize = detailsList.size();
+        //int listSize = detailsList.size();
         //add to the counter
-        listSize++;
+        //listSize++;
 
         //create a new child and add that to the group
         ChildInfo detailInfo = new ChildInfo();
-        detailInfo.setSequence(String.format("%02d", listSize));
+        //detailInfo.setSequence(String.format("%02d", listSize));
         detailInfo.setDescription(taskDetail);
         detailInfo.setDelay(delay);
-        detailsList.add(detailInfo);
+        if (at2>=0) detailsList.add(at2, detailInfo);
+        else detailsList.add(detailInfo);
+        //for (ChildInfo d : detailsList) {
+            //d.setSequence(String.format("%02d", 1 + detailsList.indexOf(d)));
+        //}
         headerInfo.setDetailsList(detailsList);
+        //headerInfo.reSequence();
 
         //find the group position inside the list
-        groupPosition = allTaskList.indexOf(headerInfo);
-        return groupPosition;
+        //groupPosition = allTaskList.indexOf(headerInfo);
+        //return groupPosition;
     }
 
     public void editDialog(final int groupPos, int childPos){
@@ -309,11 +318,41 @@ public class MainActivity extends AppCompatActivity {
 
         alertDialogBuilder.setPositiveButton(R.string.editOk, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
-                String etStr = etTime.getText().toString();
-                if (etStr.length()>0){
-                    //Verse = Integer.parseInt(etStr);
-                    //ShowVerse(true);
+                String etStr1 = etGroupTitle.getText().toString();
+                String etStr2 = etDetail.getText().toString();
+                String etStr3 = etTime.getText().toString();
+
+                if (etStr2.length()<1){etStr2 = "No Action";}
+                if (etStr3.length()<1){etStr3 = "00:05";}
+                if (etStr1.length()>0){
+                    if (chNew.isChecked()) {
+                        addTasktoExpList(etStr1, etStr2, etStr3, fgroupPos, fchildPos);
+                    }
+                    else {
+                        detailsMap.put(etStr1, detailsMap.remove(allTaskList.get(fgroupPos).getTask()));
+                        allTaskList.get(fgroupPos).setTask(etStr1);
+                        listAdapter.notifyDataSetChanged();
+
+                        if (fchildPos>=0) {
+                            allTaskList.get(fgroupPos).getDetailsList().get(fchildPos).setDescription(etStr2);
+                            allTaskList.get(fgroupPos).getDetailsList().get(fchildPos).setDelay(etStr3);
+                        }
+                        else addTasktoExpList(etStr1, etStr2, etStr3, fgroupPos, fchildPos);
+                    }
+                    listAdapter.notifyDataSetChanged();
                 }
+            }
+        });
+
+        alertDialogBuilder.setNeutralButton("Remove", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (fchildPos < 0) allTaskList.remove(fgroupPos);
+                else {
+                    allTaskList.get(fgroupPos).getDetailsList().remove(fchildPos);
+                    allTaskList.get(fgroupPos).reSequence();
+                }
+                listAdapter.notifyDataSetChanged();
             }
         });
 

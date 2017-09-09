@@ -20,6 +20,13 @@ public class GroupInfo {
 
     public void setDetailsList(ArrayList<ChildInfo> detailsList) {
         this.detailsList = detailsList;
+        reSequence();
+    }
+
+    public void reSequence(){
+        for (ChildInfo child : detailsList){
+            child.setSequence(String.format("%02d", 1 + detailsList.indexOf(child)));
+        }
     }
 
 }
