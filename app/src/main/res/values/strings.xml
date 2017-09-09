@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Astral Projection Guide</string>
+    <string name="editTitle">Add/Edit Tasks</string>
+    <string name="hintTaskName">Enter Task Name</string>
+    <string name="editCancel">Cancel</string>
+    <string name="editOk">Apply</string>
+    <string name="hintDetail">Enter description</string>
+    <string name="hintTime">Time after previous step (MM:SS)</string>
+    <string name="hintNewStep">Add a new step here.</string>
+    <string name="editDetail">Add/Edit Step</string>
+    <string name="checkboxAdd">Add New</string>
+    <string-array name="list1">
+    <item>Sequential</item>
+    <item>Random</item>
+    </string-array>
+</resources>

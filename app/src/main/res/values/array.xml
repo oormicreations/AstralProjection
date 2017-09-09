@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="defaultTasksStringArray">
+        <item>Relax</item>
+        <item>Progressive Muscle Relaxation</item>
+        <item>Invocations</item>
+        <item>Turn Inwards</item>
+        <item>Create a Gateway</item>
+        <item>Meet your Guide</item>
+        <item>Intention</item>
+        <item>Journey</item>
+        <item>Return</item>
+        <item>Journal Entry</item>
+    </string-array>
+
+    <string-array name="defaultDetStringArray0">
+        <item>Lie down on your bed comfortably</item>
+        <item>Ensure that nothing is touching you except sheets, blanket or pillows. Ensure there are no people, pets or noise or music in the room</item>
+        <item>Be on your back, arms on sides, legs straight and not crossed. Head and shoulders slightly above body level</item>
+        <item>Close your eyes, breathe naturally</item>
+    </string-array>
+
+    <string-array name="defaultDetStringArray1">
+        <item>Relax all your muscles one by one without lifting any body parts. Lets start now</item>
+        <item>Tense your feet muscles. Moderately, not too tight, not too loose</item>
+        <item>Relax them</item>
+        <item>Tense your calf muscles. Hold for a second</item>
+        <item>Relax them</item>
+        <item>Tense your thigh muscles. Hold. Relax them</item>
+        <item>Tense your butt muscles. Hold. Relax them</item>
+        <item>Tense your abdominal muscles. Hold. Relax them</item>
+        <item>Tense your lower back muscles. Hold. Relax them</item>
+        <item>Tense your chest muscles. Hold. Relax them</item>
+        <item>Tense your upper back muscles. Hold. Relax them</item>
+        <item>Tense your shoulder muscles. Hold. Relax them</item>
+        <item>Tense your arm muscles. Hold. Relax them</item>
+        <item>Tense your hand muscles. Make a fist. Hold. Relax them</item>
+        <item>Tense your neck muscles. Hold. Relax them</item>
+        <item>Tense your jaw and head muscles. Hold. Relax them</item>
+        <item>Take a deep breath. Exhale</item>
+        <item>You are deeply relaxed now</item>
+    </string-array>
+
+    <string-array name="defaultDetStringArray2">
+        <item>Recall the name and face of your Guru or anyone you respect.</item>
+        <item>Repeat after me.</item>
+        <item>I request your kind help in my exploration of Astral worlds.</item>
+        <item>I seek your guidance, protection and support.</item>
+        <item>May this journey bring me needed knowledge and wisdom.</item>
+        <item>May this adventure benefit all and everything.</item>
+        <item>Thank you.</item>
+        <item>Feel the blessings of your respected one in your body, as blissful shiver.</item>
+        <item>You are now safe and well protected.</item>
+    </string-array>
+
+    <string-array name="defaultDetStringArray3">
+        <item>Focus your attention to the touch sensations in your body.</item>
+        <item>Ignore the touch sensations by bringing your attention to a place behind your eyes.</item>
+        <item>Focus your attention on any external sounds.</item>
+        <item>Ignore them as before.</item>
+        <item>If your attention wanders back to external sensations, bring it back again.</item>
+        <item>Focus on the darkness behind your eyes.</item>
+        <item>Bring your attention to the center of your head.</item>
+        <item>Remain here.</item>
+        <item>Ignore any internal sounds, noises, voices or flashes of light or faces. They are illusory.</item>
+        <item>You have turned inwards.</item>
+        <item>It is peaceful here.</item>
+    </string-array>
+
+    <string-array name="defaultDetStringArray4">
+        <item>You will now open the inner eye.</item>
+        <item>Visualize an empty hall. It is big and has white walls and a marble floor.</item>
+        <item>You are in the center looking all around.</item>
+        <item>You see a big door in front of you. It is open and very bright sunlight is pouring in through it.</item>
+        <item>Move to the door slowly. It gets nearer and bigger as you approach it.</item>
+        <item>It leads to an open space with lots of trees and plants, its a garden. Bright green.</item>
+        <item>Remain here.</item>
+        <item>Its bright and beautiful here. Fresh air with fragrance of flowers.</item>
+    </string-array>
+
+    <string-array name="defaultDetStringArray5">
+        <item>Make an intention to see your guide here. Strongly hold the idea that they are here.</item>
+        <item>See your guide in their usual form. They are smiling at you.</item>
+        <item>You should exchange greetings now.</item>
+        <item>Ask how are they, and wait for an answer.</item>
+    </string-array>
+
+    <string-array name="defaultDetStringArray6">
+        <item>Make an intention to visit the place you wish to visit. Hold this idea firmly.</item>
+        <item>Let your guide know your intention.</item>
+        <item>Hear your own voice saying it.</item>
+        <item>If you having nothing specific, ask your guide to take you to any place where you can learn.</item>
+        <item>Let the guide decide.</item>
+    </string-array>
+
+    <string-array name="defaultDetStringArray7">
+        <item>The Guide is now holding your hand. You are ready to go.</item>
+        <item>The garden and sky is dissolving.</item>
+        <item>A tunnel appears and you step in it with your guide.</item>
+        <item>My voice is fading now.</item>
+        <item>Wish you a happy journey. I will wait here.</item>
+    </string-array>
+
+    <string-array name="defaultDetStringArray8">
+        <item>Can you hear me?</item>
+        <item>Lets go back to the body.</item>
+        <item>Remember, you were lying down in this room. Come here.</item>
+        <item>Become aware of darkness behind your eyes.</item>
+        <item>Wiggle your big toe.</item>
+        <item>Move your feet and hand.</item>
+        <item>Open your eyes slowly.</item>
+        <item>Stay here.</item>
+        <item>Recall what happened.</item>
+    </string-array>
+
+    <string-array name="defaultDetStringArray9">
+        <item>I suggest you write down todays events now.</item>
+        <item>Do not forget to write any new lessons you learnt.</item>
+        <item>I will open your logbook.</item>
+        <item>See you soon.</item>
+    </string-array>
+
+    <string-array name="defaultTimeArray">
+        <item>00:00</item>
+        <item>00:30</item>
+        <item>00:10</item>
+        <item>00:40</item>
+
+
+        <item>00:30</item>
+        <item>00:05</item>
+        <item>00:05</item>
+        <item>00:05</item>
+        <item>00:05</item>
+        <item>00:05</item>
+        <item>00:10</item>
+        <item>00:10</item>
+        <item>00:10</item>
+        <item>00:10</item>
+        <item>00:10</item>
+        <item>00:10</item>
+        <item>00:10</item>
+        <item>00:10</item>
+        <item>00:10</item>
+        <item>00:10</item>
+        <item>00:10</item>
+        <item>00:05</item>
+
+        <item>00:30</item>
+        <item>00:10</item>
+        <item>00:05</item>
+        <item>00:05</item>
+        <item>00:05</item>
+        <item>00:05</item>
+        <item>00:05</item>
+        <item>00:05</item>
+        <item>00:20</item>
+
+        <item>00:20</item>
+        <item>00:10</item>
+        <item>00:10</item>
+        <item>00:05</item>
+        <item>00:05</item>
+        <item>00:30</item>
+        <item>00:20</item>
+        <item>00:20</item>
+        <item>01:00</item>
+        <item>01:00</item>
+        <item>02:00</item>
+
+        <item>01:00</item>
+        <item>00:05</item>
+        <item>00:10</item>
+        <item>00:10</item>
+        <item>00:15</item>
+        <item>00:20</item>
+        <item>00:20</item>
+        <item>01:00</item>
+
+        <item>01:00</item>
+        <item>02:00</item>
+        <item>00:30</item>
+        <item>00:20</item>
+
+        <item>01:00</item>
+        <item>01:00</item>
+        <item>00:20</item>
+        <item>00:30</item>
+        <item>00:30</item>
+
+        <item>01:00</item>
+        <item>00:10</item>
+        <item>00:10</item>
+        <item>00:05</item>
+        <item>00:05</item>
+
+        <item>20:00</item>
+        <item>02:00</item>
+        <item>01:00</item>
+        <item>00:30</item>
+        <item>00:20</item>
+        <item>00:10</item>
+        <item>00:05</item>
+        <item>00:05</item>
+        <item>02:00</item>
+
+        <item>05:00</item>
+        <item>00:05</item>
+        <item>00:05</item>
+        <item>00:05</item>
+
+    </string-array>
+
+    <!--
+        <string-array name="defaultDetStringArray">
+            <item></item>
+            <item></item>
+            <item></item>
+            <item></item>
+            <item></item>
+            <item></item>
+            <item></item>
+            <item></item>
+            <item></item>
+            <item></item>
+        </string-array>
+    -->
+
+
+</resources>
