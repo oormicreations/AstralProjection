@@ -5,10 +5,8 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
-import android.view.DragEvent;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -21,7 +19,7 @@ import android.widget.Toast;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.StringTokenizer;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -98,12 +96,10 @@ public class MainActivity extends AppCompatActivity {
                     int childPosition = ExpandableListView.getPackedPositionChild(id);
                     int groupPosition = ExpandableListView.getPackedPositionGroup(id);
                     editDialog(groupPosition, childPosition);
-                    //do your per-item callback here
                     return true; //true if we consumed the click, false if not
 
                 } else if (itemType == ExpandableListView.PACKED_POSITION_TYPE_GROUP) {
                     int groupPosition = ExpandableListView.getPackedPositionGroup(id);
-                    //do your per-group callback here
                     editDialog(groupPosition, -1);
                     return true; //true if we consumed the click, false if not
 
@@ -249,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
 
         String title = getString(R.string.editTitle);
         if (childPos>0) title = getString(R.string.editDetail);
-        TextView tv = new TextView(this);
+        final TextView tv = new TextView(this);
         tv.setText(title);
         tv.setPadding(40, 40, 40, 40);
         tv.setGravity(Gravity.CENTER);
@@ -277,12 +273,32 @@ public class MainActivity extends AppCompatActivity {
 
         final EditText etTime = new EditText(this);
         etTime.setHint(R.string.hintTime);
-        etTime.setInputType(InputType.TYPE_CLASS_NUMBER);
+        etTime.setInputType(InputType.TYPE_DATETIME_VARIATION_TIME | InputType.TYPE_CLASS_DATETIME);
         if (childPos>=0) {
             etTime.setText(allTaskList.get(groupPos).getDetailsList().get(childPos).getDelay());
         }
         //etTime.setGravity(Gravity.CENTER);
         layout.addView(etTime);
+
+/*
+        etTime.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                //if (s.length()==2) etTime.setText(etTime.getText() + ":");
+                tv.setText(s);
+            }
+        });
+*/
 
         final int fgroupPos = groupPos;
         final int fchildPos = childPos;
@@ -322,23 +338,37 @@ public class MainActivity extends AppCompatActivity {
                 String etStr2 = etDetail.getText().toString();
                 String etStr3 = etTime.getText().toString();
 
-                if (etStr2.length()<1){etStr2 = "No Action";}
-                if (etStr3.length()<1){etStr3 = "00:05";}
-                if (etStr1.length()>0){
+                if (!checkTime(etStr3)) {
+                    etStr3 = "00:00";
+                    setStatus(true, 1, fgroupPos, fchildPos);
+                    //allTaskList.get(fgroupPos).getDetailsList().get(fchildPos).hasError = true;
+                } else setStatus(false, 1, fgroupPos, fchildPos); //allTaskList.get(fgroupPos).getDetailsList().get(fchildPos).hasError = false;
+
+                if (etStr2.length() < 1) {
+                    etStr2 = "No Action";
+                    setStatus(true, 1, fgroupPos, fchildPos);
+                }
+
+                if (etStr1.length() > 0) {
                     if (chNew.isChecked()) {
                         addTasktoExpList(etStr1, etStr2, etStr3, fgroupPos, fchildPos);
-                    }
-                    else {
+                        if (etStr2.length() > 0) setStatus(true, 2, fgroupPos, fchildPos);
+                        else setStatus(false, 2, fgroupPos, fchildPos);
+                    } else {
                         detailsMap.put(etStr1, detailsMap.remove(allTaskList.get(fgroupPos).getTask()));
                         allTaskList.get(fgroupPos).setTask(etStr1);
                         listAdapter.notifyDataSetChanged();
 
-                        if (fchildPos>=0) {
+                        if (fchildPos >= 0) {
                             allTaskList.get(fgroupPos).getDetailsList().get(fchildPos).setDescription(etStr2);
                             allTaskList.get(fgroupPos).getDetailsList().get(fchildPos).setDelay(etStr3);
+                            setStatus(true, 2, fgroupPos, fchildPos); //allTaskList.get(fgroupPos).getDetailsList().get(fchildPos).isNew = true;
+                        } else {
+                            addTasktoExpList(etStr1, etStr2, etStr3, fgroupPos, fchildPos);
+                            if (etStr3.equals("No Action")) setStatus(true, 1, fgroupPos, fchildPos + 1);
                         }
-                        else addTasktoExpList(etStr1, etStr2, etStr3, fgroupPos, fchildPos);
                     }
+
                     listAdapter.notifyDataSetChanged();
                 }
             }
@@ -347,7 +377,10 @@ public class MainActivity extends AppCompatActivity {
         alertDialogBuilder.setNeutralButton("Remove", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                if (fchildPos < 0) allTaskList.remove(fgroupPos);
+                if (fchildPos < 0) {
+                    detailsMap.remove(allTaskList.get(fgroupPos).getTask());
+                    allTaskList.remove(fgroupPos);
+                }
                 else {
                     allTaskList.get(fgroupPos).getDetailsList().remove(fchildPos);
                     allTaskList.get(fgroupPos).reSequence();
@@ -362,6 +395,22 @@ public class MainActivity extends AppCompatActivity {
             alertDialog.show();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public boolean checkTime(String tstr){
+        StringTokenizer st = new StringTokenizer(tstr, ":");
+        if( (tstr.length()<1) || (tstr.length()>8) ||
+                (!tstr.contains(":")) || (st.countTokens()>2)) return false;
+        return true;
+    }
+
+    private void setStatus(boolean status, int stype, int gp, int cp){
+        if (cp<0) return;
+        if (stype==1) allTaskList.get(gp).getDetailsList().get(cp).hasError = status;
+        if (stype==2) {
+            allTaskList.get(gp).getDetailsList().get(cp).isNew = status &&
+                    allTaskList.get(gp).getDetailsList().get(cp).hasError;
         }
     }
 

@@ -1,5 +1,8 @@
 package in.oormi.astralprojection;
+import android.animation.ArgbEvaluator;
+import android.animation.ObjectAnimator;
 import android.content.Context;
+import android.graphics.Color;
 import android.os.SystemClock;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -39,11 +42,11 @@ public class CustomAdapter extends BaseExpandableListAdapter {
                              View view, ViewGroup parent) {
 
         ChildInfo detailInfo = (ChildInfo) getChild(groupPosition, childPosition);
-        if (view == null) {
+        //if (view == null) {
             LayoutInflater infalInflater =
                     (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             view = infalInflater.inflate(R.layout.child_items, null);
-        }
+        //}
 
         TextView sequence = (TextView) view.findViewById(R.id.sequence);
         sequence.setText(detailInfo.getSequence().trim() + ". ");
@@ -61,14 +64,35 @@ public class CustomAdapter extends BaseExpandableListAdapter {
         }
         long timeInMilliseconds = mDate.getTime() - mDate0.getTime();
         cm.setBase(SystemClock.elapsedRealtime() - timeInMilliseconds);
+        cm.setTextColor(Color.rgb(0,127,0));
 
+        TextView childItem = (TextView) view.findViewById(R.id.childItem);
+        childItem.setText(detailInfo.getDescription().trim());
+
+       if (detailInfo.hasError) {
+            cm.setTextColor(Color.RED);
+           if (childItem.getText()=="No Action") childItem.setTextColor(Color.RED);
+
+            ObjectAnimator colorFade = ObjectAnimator.ofObject(view, "backgroundColor",
+                    new ArgbEvaluator(), Color.argb(255, 255, 255, 255), 0xffffeecc);
+            colorFade.setDuration(2000);
+            colorFade.start();
+        }
+        else {
+            if (detailInfo.isNew) {
+
+                ObjectAnimator colorFade1 = ObjectAnimator.ofObject(view, "backgroundColor",
+                        new ArgbEvaluator(), Color.argb(255, 255, 255, 255), 0xFFFDEBFF);
+                colorFade1.setDuration(2000);
+                colorFade1.start();
+
+            }
+        }
         //int min = 0;
         //int sec = Integer.decode(detailInfo.getDelay().trim());
         //cm.setBase(SystemClock.elapsedRealtime() - (min * 60000 + sec * 1000));
         //cm.start();
 
-        TextView childItem = (TextView) view.findViewById(R.id.childItem);
-        childItem.setText(detailInfo.getDescription().trim());
 
         return view;
     }
@@ -101,11 +125,11 @@ public class CustomAdapter extends BaseExpandableListAdapter {
                              ViewGroup parent) {
 
         GroupInfo headerInfo = (GroupInfo) getGroup(groupPosition);
-        if (view == null) {
+        //if (view == null) {
             LayoutInflater inf =
                     (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             view = inf.inflate(R.layout.group_items, null);
-        }
+        //}
 
         TextView heading = (TextView) view.findViewById(R.id.heading);
         heading.setText(headerInfo.getTask().trim());
