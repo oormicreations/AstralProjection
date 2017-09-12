@@ -42,7 +42,8 @@ public class CustomAdapter extends BaseExpandableListAdapter {
                              View view, ViewGroup parent) {
 
         ChildInfo detailInfo = (ChildInfo) getChild(groupPosition, childPosition);
-        //if (view == null) {
+
+        //if (view == null) { //do not reuse views, it messes up colored backgrounds
             LayoutInflater infalInflater =
                     (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             view = infalInflater.inflate(R.layout.child_items, null);
@@ -70,9 +71,6 @@ public class CustomAdapter extends BaseExpandableListAdapter {
         childItem.setText(detailInfo.getDescription().trim());
 
        if (detailInfo.hasError) {
-            cm.setTextColor(Color.RED);
-           if (childItem.getText()=="No Action") childItem.setTextColor(Color.RED);
-
             ObjectAnimator colorFade = ObjectAnimator.ofObject(view, "backgroundColor",
                     new ArgbEvaluator(), Color.argb(255, 255, 255, 255), 0xffffeecc);
             colorFade.setDuration(2000);
@@ -88,12 +86,6 @@ public class CustomAdapter extends BaseExpandableListAdapter {
 
             }
         }
-        //int min = 0;
-        //int sec = Integer.decode(detailInfo.getDelay().trim());
-        //cm.setBase(SystemClock.elapsedRealtime() - (min * 60000 + sec * 1000));
-        //cm.start();
-
-
         return view;
     }
 

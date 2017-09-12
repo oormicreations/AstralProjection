@@ -122,7 +122,7 @@
     </string-array>
 
     <string-array name="defaultTimeArray">
-        <item>00:00</item>
+        <item>00:10</item>
         <item>00:30</item>
         <item>00:10</item>
         <item>00:40</item>

@@ -51,27 +51,50 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    // code to add the new tasks
-    void addData(GroupInfo tasks) {
+    // add the new tasks
+    void addData(GroupInfo task) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
-        values.put(KEY_NAME, tasks.getTask());
+        values.put(KEY_NAME, task.getTask());
 
         // Inserting Row
         long id = db.insert(TABLE_TASKS, null, values);
         values.clear();
 
-        ArrayList<ChildInfo> cinfolist = tasks.getDetailsList();
+        ArrayList<ChildInfo> cinfolist = task.getDetailsList();
 
         for (int n = 0; n < cinfolist.size(); n ++) {
             ChildInfo cinfo = cinfolist.get(n);
             String cname = cinfo.getDescription();
             String cdelay = cinfo.getDelay();
             values.put(KEY_DET, cname);
-            //db.insert(TABLE_DETAILS, null, values);
             values.put(KEY_DELAY, cdelay);
-            //db.insert(TABLE_DETAILS, null, values);
+            values.put(KEY_TASKID, (int)id);
+            db.insert(TABLE_DETAILS, null, values);
+        }
+
+        db.close();
+    }
+    // add the new tasks
+    void insertData(int at, GroupInfo task) {
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put(KEY_NAME, task.getTask());
+
+        // Inserting Row
+        long id = db.insert(TABLE_TASKS, null, values);
+        values.clear();
+
+        ArrayList<ChildInfo> cinfolist = task.getDetailsList();
+
+        for (int n = 0; n < cinfolist.size(); n ++) {
+            ChildInfo cinfo = cinfolist.get(n);
+            String cname = cinfo.getDescription();
+            String cdelay = cinfo.getDelay();
+            values.put(KEY_DET, cname);
+            values.put(KEY_DELAY, cdelay);
             values.put(KEY_TASKID, (int)id);
             db.insert(TABLE_DETAILS, null, values);
         }
@@ -79,7 +102,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.close();
     }
 
-    // code to get the single contact
     GroupInfo getContact(int id) {
         SQLiteDatabase db = this.getReadableDatabase();
 
@@ -129,20 +151,15 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return taskList;
     }
 
-    // code to update the single contact
     public int updateContact(GroupInfo contact) {
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put(KEY_NAME, contact.getTask());
-       // values.put(KEY_PH_NO, contact.getDescription());
-
-        // updating row
         return db.update(TABLE_TASKS, values, KEY_ID + " = ?",
                 new String[] { "ID" });
     }
 
-    // Deleting single contact
     public void deleteContact(GroupInfo contact) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(TABLE_TASKS, KEY_ID + " = ?",
@@ -162,11 +179,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
     public void resetDB () throws SQLException {
         SQLiteDatabase db = this.getWritableDatabase ();
-       // db.execSQL("DELETE FROM " + TABLE_TASKS);
-        //db.execSQL("DELETE FROM " + TABLE_DETAILS);
         db.delete(TABLE_TASKS, null, null);
         db.delete(TABLE_DETAILS, null, null);
         db.close ();
-        //this.onCreate (db);
     }
 }

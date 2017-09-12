@@ -9,6 +9,7 @@
     <string name="hintNewStep">Add a new step here.</string>
     <string name="editDetail">Add/Edit Step</string>
     <string name="checkboxAdd">Add New</string>
+    <string name="editGroupDialogTitle">Add/Edit a Task</string>
     <string-array name="list1">
     <item>Sequential</item>
     <item>Random</item>
