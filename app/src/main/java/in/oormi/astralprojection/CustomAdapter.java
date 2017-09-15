@@ -50,7 +50,7 @@ public class CustomAdapter extends BaseExpandableListAdapter {
         //}
 
         TextView sequence = (TextView) view.findViewById(R.id.sequence);
-        sequence.setText(detailInfo.getSequence().trim() + ". ");
+        sequence.setText(String.format("%02d. ", 1 + detailInfo.getSequence()));
 
         Chronometer cm = (Chronometer) view.findViewById(R.id.chronometer2);
         //cm.setFormat("Time (%s)");

@@ -4,14 +4,24 @@ import java.util.ArrayList;
 public class GroupInfo {
 
     private String task;
+    private int taskId;
     private ArrayList<ChildInfo> detailsList = new ArrayList<ChildInfo>();
 
     public String getTask() {
         return task;
     }
 
-    public void setTask(String name) {
+    public int getId() {
+        return taskId;
+    }
+
+    public void setTaskId(int id) {
+        this.taskId = id;
+    }
+
+    public void setTask(String name, int id) {
         this.task = name;
+        this.taskId = id;
     }
 
     public ArrayList<ChildInfo> getDetailsList() {
@@ -24,8 +34,9 @@ public class GroupInfo {
     }
 
     public void reSequence(){
-        for (ChildInfo child : detailsList){
-            child.setSequence(String.format("%02d", 1 + detailsList.indexOf(child)));
+        for (int s=0; s<detailsList.size();s++){
+            detailsList.get(s).setSequence(s);
+            //child.setSequence(String.format("%02d", 1 + detailsList.indexOf(child)));
         }
     }
 

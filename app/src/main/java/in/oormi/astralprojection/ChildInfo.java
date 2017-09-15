@@ -2,18 +2,18 @@ package in.oormi.astralprojection;
 
 public class ChildInfo {
 
-    private String sequence = "";
+    private int sequence = 0;
     private String description = "";
     private String delay = "";
     boolean hasError = false;
     boolean isNew = false;
 
 
-    public String getSequence() {
+    public int getSequence() {
         return sequence;
     }
 
-    public void setSequence(String sequence) {
+    public void setSequence(int sequence) {
         this.sequence = sequence;
     }
 

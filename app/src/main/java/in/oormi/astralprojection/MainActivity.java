@@ -12,6 +12,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -87,6 +88,17 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+
+        ImageButton resetButton = (ImageButton) findViewById(R.id.imageButtonReset);
+        resetButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                allTaskList.clear();
+                detailsMap.clear();
+                initData();
+                listAdapter.notifyDataSetChanged();
+            }
+        });
     }
 
     private void expandAll() {
@@ -119,22 +131,22 @@ public class MainActivity extends AppCompatActivity {
             defDetailsAll.add(getResources().getStringArray(idArray[id]));
         }
 
-        try {
-            db.resetDB();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
         int ndelay = 0;
 
         for (int ntask = 0; ntask < defaultTasks.length; ntask++) {
             if (ntask < defDetailsAll.size()) {
                 for (int ntaskdet = 0; ntaskdet < defDetailsAll.get(ntask).length; ntaskdet++) {
                     addTasktoExpList(defaultTasks[ntask], defDetailsAll.get(ntask)[ntaskdet],
-                            defTimes[ndelay], -1, -1);
+                            defTimes[ndelay], ntask, -1);
                     ndelay++;
                 }
             }
+        }
+
+        try {
+            db.resetDB();
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
 
         for (int ntask = 0; ntask < allTaskList.size(); ntask++) {
@@ -148,6 +160,7 @@ public class MainActivity extends AppCompatActivity {
         if (tcount<1) return false;
         List<GroupInfo> allTasks = db.getAllTasks();
         allTaskList.addAll(allTasks);
+        for(GroupInfo task: allTaskList) detailsMap.put(task.getTask(), task);
         Toast.makeText(getBaseContext(), String.format("Db Task count = %d", tcount), Toast.LENGTH_SHORT).show();
         return true;
     }
@@ -158,10 +171,13 @@ public class MainActivity extends AppCompatActivity {
         //add the group if doesn't exists
         if(task == null){
             task = new GroupInfo();
-            task.setTask(taskName);
+            task.setTask(taskName, at1);
             detailsMap.put(taskName, task);
             if (at1>=0) allTaskList.add(at1, task);
             else allTaskList.add(task);
+            for (GroupInfo t: allTaskList){
+                t.setTaskId(allTaskList.indexOf(t));
+            }
         }
 
         //get the children for the group
@@ -258,6 +274,8 @@ public class MainActivity extends AppCompatActivity {
                 String etStr1 = etTaskName.getText().toString();
                 String etStr2 = etNewStep.getText().toString();
                 String etStr3 = etTime.getText().toString();
+                boolean newStepAdded = false;
+                String oldName = allTaskList.get(groupPos).getTask();
 
                 if (!checkTime(etStr3)) etStr3 = "00:00";
                 if (etStr2.length() < 1) etStr2 = "No Action";
@@ -265,16 +283,26 @@ public class MainActivity extends AppCompatActivity {
                 if (etStr1.length() > 0) {
                     if (chNew.isChecked()) {
                         addTasktoExpList(etStr1, etStr2, etStr3, groupPos, -1);
+                        db.insertData(groupPos, allTaskList.get(groupPos));
                     } else {
-                        detailsMap.put(etStr1, detailsMap.remove(allTaskList.get(groupPos).getTask()));
-                        allTaskList.get(groupPos).setTask(etStr1);
-                        addTasktoExpList(etStr1, etStr2, etStr3, groupPos, -1);
+                        if (allTaskList.get(groupPos).getTask().equals(etStr1)){//new step was added
+                            addTasktoExpList(etStr1, etStr2, etStr3, groupPos, -1);
+                            newStepAdded = true;
+                            db.insertStep(allTaskList.get(groupPos),
+                                    allTaskList.get(groupPos).getDetailsList().size() - 1);
+                        }
+                        else {//only name changed
+                            detailsMap.put(etStr1,
+                                    detailsMap.remove(allTaskList.get(groupPos).getTask()));
+                            allTaskList.get(groupPos).setTask(etStr1, groupPos);
+                            db.updateTask(allTaskList.get(groupPos));
+                        }
                         listAdapter.notifyDataSetChanged();
                     }
 
                     listAdapter.notifyDataSetChanged();
                 }
-                setStatus(groupPos, -1);
+                if (newStepAdded)setStatus(groupPos, -1);
             }
         });
 
@@ -282,9 +310,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 detailsMap.remove(allTaskList.get(groupPos).getTask());
+                db.deleteTask(groupPos, allTaskList.get(groupPos));
                 allTaskList.remove(groupPos);
+
                 if (allTaskList.size()<1) {
                     addTasktoExpList("No Name", "No Action", "00:00", 0, -1);
+                    db.insertData(0, allTaskList.get(0));
                 }
                 listAdapter.notifyDataSetChanged();
                 saveFlag = true;
@@ -375,9 +406,11 @@ public class MainActivity extends AppCompatActivity {
 
                 if (chNew.isChecked()) {
                     addTasktoExpList(etStr1, etStr2, etStr3, groupPos, childPos);
+                    db.insertStep(allTaskList.get(groupPos), childPos);
                 } else {
                     child.setDescription(etStr2);
                     child.setDelay(etStr3);
+                    db.updateStep(allTaskList.get(groupPos), childPos);
                 }
                 listAdapter.notifyDataSetChanged();
                 setStatus(groupPos, childPos);
@@ -387,11 +420,14 @@ public class MainActivity extends AppCompatActivity {
         alertDialogBuilder.setNeutralButton("Remove", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
+                db.deleteStep(allTaskList.get(groupPos), childPos);
                 allTaskList.get(groupPos).getDetailsList().remove(childPos);
+
                 allTaskList.get(groupPos).reSequence();
                 if (allTaskList.get(groupPos).getDetailsList().size()<1) {
                     addTasktoExpList(etGroupTitle.getText().toString(),
                             "No Action", "00:00", groupPos, -1);
+                    db.insertStep(allTaskList.get(groupPos), 0);
                 }
                 listAdapter.notifyDataSetChanged();
                 saveFlag = true;
