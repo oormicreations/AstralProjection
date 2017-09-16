@@ -10,8 +10,12 @@
     <string name="editDetail">Add/Edit Step</string>
     <string name="checkboxAdd">Add New</string>
     <string name="editGroupDialogTitle">Add/Edit a Task</string>
-    <string-array name="list1">
-    <item>Sequential</item>
-    <item>Random</item>
-    </string-array>
+    <string name="longpress">Long Press an item to add/edit.</string>
+    <string name="dbmsg">Db loaded</string>
+    <string name="initmsg">Data Initialized.</string>
+    <string name="welcomeMsg">Welcome to the guided Astral Projection session.</string>
+    <string name="ttserr1">TTS Error: This language is not supported</string>
+    <string name="ttserr2">TTS Error Initialization Failed!</string>
+    <string name="settings">Settings</string>
+    <string name="chooser">Select an App</string>
 </resources>

@@ -2,11 +2,19 @@ package in.oormi.astralprojection;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.os.Handler;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.InputType;
 import android.view.Gravity;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -14,13 +22,21 @@ import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ToggleButton;
 
 import java.sql.SQLException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.StringTokenizer;
 
 public class MainActivity extends AppCompatActivity {
@@ -31,25 +47,106 @@ public class MainActivity extends AppCompatActivity {
     private CustomAdapter listAdapter;
     private ExpandableListView simpleExpandableListView;
     public DatabaseHandler db = new DatabaseHandler(this);
-    public boolean saveFlag = false;
+    boolean animrunning = false;
+    long startTime = 0;
+    int gnum = 0;
+    int cnum = 0;
+    TextToSpeech tts;
+    float speechRate = 0.85f;
+    Locale locale = Locale.getDefault();
+    boolean doneSpeaking = true;
+    float sessionSpeed = 1.0f;
+
+    //runs without a timer by reposting this handler at the end of the runnable
+    Handler timerHandler = new Handler();
+    Runnable timerRunnable = new Runnable() {
+
+        @Override
+        public void run() {
+
+            if (!doneSpeaking){
+                //Toast.makeText(getBaseContext(), "Not Done", Toast.LENGTH_SHORT).show();
+                timerHandler.postDelayed(this, 2000); //wait 2 sec
+                return;
+            }
+            speakInstruction();
+
+            boolean carryOn = false;
+            if (cnum < allTaskList.get(gnum).getDetailsList().size() - 1) {
+                cnum++;
+                //timerHandler.postDelayed(this, next);
+                carryOn = true;
+            } else {
+                if (gnum < allTaskList.size() - 1) {
+                    cnum = 0;
+                    gnum++;
+                    //timerHandler.postDelayed(this, next);
+                    carryOn = true;
+                }
+            }
+            if (carryOn){
+                timerHandler.postDelayed(this, getNextDelay());
+            }
+
+        }
+
+    };
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_main);
 
-        if(!loadDb()) {
-            initData();
-        }
+        if(!loadDb()) initData();
+        Toast toast = Toast.makeText(this,getString(R.string.longpress), Toast.LENGTH_SHORT );
+        toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+        toast.show();
 
-        //get reference of the ExpandableListView
+        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status == TextToSpeech.SUCCESS) {
+                    int result = tts.setLanguage(locale);
+                    if (result == TextToSpeech.LANG_MISSING_DATA ||
+                            result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                        Toast.makeText(getBaseContext(), R.string.ttserr1,
+                                Toast.LENGTH_SHORT).show();
+                    } else {
+                        tts.setSpeechRate(speechRate);
+                        tts.speak(getString(R.string.welcomeMsg),
+                                TextToSpeech.QUEUE_FLUSH, null,
+                                TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+                    }
+                } else
+                    Toast.makeText(getBaseContext(), R.string.ttserr2,
+                            Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+            @Override
+            public void onStart(String utteranceId) {
+
+            }
+
+            @Override
+            public void onDone(String utteranceId) {
+                doneSpeaking = true;
+            }
+
+            @Override
+            public void onError(String utteranceId) {
+
+            }
+        });
+
         simpleExpandableListView = (ExpandableListView) findViewById(R.id.listviewsession);
-        // create the adapter by passing your ArrayList data
         listAdapter = new CustomAdapter(MainActivity.this, allTaskList);
-        // attach the adapter to the expandable list view
         simpleExpandableListView.setAdapter(listAdapter);
 
-        // setOnGroupClickListener listener for group heading click
+        //  listener for group heading click
         simpleExpandableListView.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
             @Override
             public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
@@ -57,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // setOnChildClickListener listener for child row click
+        //  listener for child row click
         simpleExpandableListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
             public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
@@ -89,16 +186,279 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        final ToggleButton toggle = (ToggleButton) findViewById(R.id.toggleButtonStartStop);
+        toggle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    animrunning = false;
+                    startTimer();
+                } else {
+                    stopTimer(true);
+                    //toggle.clearAnimation();
+                }
+            }
+        });
+
         ImageButton resetButton = (ImageButton) findViewById(R.id.imageButtonReset);
         resetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                allTaskList.clear();
-                detailsMap.clear();
-                initData();
-                listAdapter.notifyDataSetChanged();
+                DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which){
+                            case DialogInterface.BUTTON_POSITIVE:
+                                //Yes button clicked
+                                stopTimer(false);
+                                toggle.setChecked(false);
+
+                                allTaskList.clear();
+                                detailsMap.clear();
+                                initData();
+                                listAdapter.notifyDataSetChanged();
+
+                                break;
+
+                            case DialogInterface.BUTTON_NEGATIVE:
+                                //No button clicked
+                                break;
+                        }
+                    }
+                };
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Confirm Data Reset");
+                builder.setMessage("All changes will be lost. Are you sure?")
+                        .setPositiveButton("Yes", dialogClickListener)
+                        .setNegativeButton("No", dialogClickListener).show();
             }
         });
+
+        ImageButton mbuttonSet = (ImageButton) findViewById(R.id.imageButtonSet);
+        mbuttonSet.setOnClickListener(
+                new View.OnClickListener(){
+                    @Override
+                    public void onClick (View view){
+                        stopTimer(false);
+                        toggle.setChecked(false);
+                        editSettingDialog();
+                    }
+                });
+
+    }
+
+    private void editSettingDialog() {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+
+        LinearLayout layout = new LinearLayout(this);
+        LinearLayout.LayoutParams params =
+                new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        layout.setLayoutParams(params);
+
+        layout.setGravity(Gravity.CLIP_VERTICAL);
+        layout.setPadding(10,10,10,10);
+        layout.setBackgroundColor(ContextCompat.getColor(getBaseContext(),
+                R.color.colorDialogLayout));
+
+        final TextView tv = new TextView(this);
+        tv.setText(R.string.settings);
+        tv.setPadding(40, 40, 40, 40);
+        tv.setGravity(Gravity.CENTER);
+        tv.setTextSize(20);
+
+        alertDialogBuilder.setView(layout);
+        alertDialogBuilder.setCustomTitle(tv);
+
+        final TextView tvSesSpeed = new TextView(this);
+        tvSesSpeed.setText("Session Speed");
+        tvSesSpeed.setPadding(80,10,10,10);
+        layout.addView(tvSesSpeed);
+
+        final SeekBar sessionSpeedBar = new SeekBar(this);
+        sessionSpeedBar.setMax(200);
+        sessionSpeedBar.setProgress(100);
+        layout.addView(sessionSpeedBar);
+
+        final TextView tvSpeechRate = new TextView(this);
+        tvSpeechRate.setText("Speech Rate");
+        tvSpeechRate.setPadding(80,10,10,10);
+        layout.addView(tvSpeechRate);
+
+        final SeekBar speechRateBar = new SeekBar(this);
+        speechRateBar.setMax(200);
+        speechRateBar.setProgress(85);
+        layout.addView(speechRateBar);
+
+        final TextView tvVoice = new TextView(this);
+        tvVoice.setText("Voice Locale");
+        tvVoice.setPadding(80,10,10,10);
+        layout.addView(tvVoice);
+
+        final RadioButton rb1 = new RadioButton(this);
+        rb1.setText("Default");
+        rb1.setChecked(false);
+        final RadioButton rb2 = new RadioButton(this);
+        rb2.setText("EN-US");
+        rb2.setChecked(false);
+        final RadioButton rb3 = new RadioButton(this);
+        rb3.setText("EN-UK");
+        rb3.setChecked(false);
+        final RadioButton rb4 = new RadioButton(this);
+        rb4.setText("EN-IN");
+        rb4.setChecked(false);
+
+        final RadioGroup radioGroup = new RadioGroup(this);
+        radioGroup.addView(rb1);
+        radioGroup.addView(rb2);
+        radioGroup.addView(rb3);
+        radioGroup.addView(rb4);
+        radioGroup.setOrientation(RadioGroup.HORIZONTAL);
+        //radioGroup.setPadding(60,10,10,10);
+        radioGroup.setGravity(Gravity.CENTER);
+        radioGroup.check(rb1.getId());
+        layout.addView(radioGroup);
+
+
+        alertDialogBuilder.setNegativeButton(R.string.editCancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                dialog.cancel();
+            }
+        });
+
+        alertDialogBuilder.setPositiveButton("Apply", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                sessionSpeed = (float)sessionSpeedBar.getProgress()/100.f;
+                speechRate = (float)speechRateBar.getProgress()/100.f;
+                if (sessionSpeed<0.1f) sessionSpeed = 0.1f;
+                if (speechRate<0.1f) speechRate = 0.1f;
+
+                int loc = radioGroup.getCheckedRadioButtonId();
+                if (loc == rb1.getId()) locale = Locale.getDefault();
+                if (loc == rb2.getId()) locale = Locale.US;
+                if (loc == rb3.getId()) locale = Locale.UK;
+                if (loc == rb4.getId()) locale = Locale.ENGLISH;//find out
+
+                tts.setSpeechRate(speechRate);
+                tts.setLanguage(locale);
+            }
+        });
+
+        sessionSpeedBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                tvSesSpeed.setText("Session Speed : " + String.valueOf(progress) + " %");
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+        speechRateBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                tvSpeechRate.setText("Speech Rate : " + String.valueOf(progress) + " %");
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+
+
+            AlertDialog edSetDialog = alertDialogBuilder.create();
+        edSetDialog.getWindow().setBackgroundDrawableResource(R.color.colorDialog);
+        sessionSpeedBar.setProgress((int)(sessionSpeed*100.0f));
+        speechRateBar.setProgress((int)(speechRate*100.0f));
+        tvSpeechRate.setText("Speech Rate : " + String.valueOf(speechRateBar.getProgress()) + " %");
+        tvSesSpeed.setText("Session Speed : " + String.valueOf(sessionSpeedBar.getProgress()) + " %");
+        if (locale == Locale.getDefault()) radioGroup.check(rb1.getId());
+        if (locale == Locale.US) radioGroup.check(rb2.getId());
+        if (locale == Locale.UK) radioGroup.check(rb3.getId());
+        if (locale == Locale.ENGLISH) radioGroup.check(rb4.getId());
+
+        try {
+            edSetDialog.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void startTimer() {
+        startTime = System.currentTimeMillis();
+        gnum = 0;
+        cnum = 0;
+        timerHandler.postDelayed(timerRunnable, getNextDelay());
+
+        if (!animrunning) {
+            final ToggleButton toggle = (ToggleButton) findViewById(R.id.toggleButtonStartStop);
+            final Animation animation = AnimationUtils.loadAnimation(MainActivity.this,
+                    R.anim.scaleup);
+            toggle.startAnimation(animation);
+            animrunning = true;
+        }
+
+    }
+
+    private void stopTimer(boolean stopanim) {
+        tts.stop();
+        timerHandler.removeCallbacks(timerRunnable);
+        final ToggleButton toggle = (ToggleButton) findViewById(R.id.toggleButtonStartStop);
+        toggle.setChecked(false);
+        if (stopanim) {
+            final Animation animation = AnimationUtils.loadAnimation(MainActivity.this,
+                    R.anim.scaledn);
+            toggle.startAnimation(animation);
+        }
+    }
+
+    private void speakInstruction(){
+        ChildInfo child = allTaskList.get(gnum).getDetailsList().get(cnum);
+/*
+        long millis = System.currentTimeMillis() - startTime;
+        int seconds = (int) (millis / 1000);
+        int minutes = seconds / 60;
+        seconds = seconds % 60;
+
+        String str = String.format("%02d:%02d, g=%d, c=%d", minutes, seconds, gnum, cnum);
+        str = str + "\n" + allTaskList.get(gnum).getTask() + ":: " + child.getDescription();
+        Toast.makeText(getBaseContext(), str, Toast.LENGTH_SHORT).show();
+*/
+        doneSpeaking = false;
+        tts.speak(child.getDescription(), TextToSpeech.QUEUE_FLUSH, null,
+                TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+    }
+
+    private long getNextDelay() {
+        ChildInfo child = allTaskList.get(gnum).getDetailsList().get(cnum);
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        Date mDate = null;
+        Date mDate0 = null;
+        try {
+            mDate = sdf.parse("00:" + child.getDelay().trim());
+            mDate0 = sdf.parse("00:00:00");
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        float next = (float)(mDate.getTime() - mDate0.getTime())/sessionSpeed;
+        long kk = (long)next;
+        return (long) next;
     }
 
     private void expandAll() {
@@ -152,7 +512,9 @@ public class MainActivity extends AppCompatActivity {
         for (int ntask = 0; ntask < allTaskList.size(); ntask++) {
             db.addData(allTaskList.get(ntask));
         }
-        Toast.makeText(getBaseContext(), String.format("Init complete."), Toast.LENGTH_SHORT).show();
+        Toast toast = Toast.makeText(this,getString(R.string.initmsg), Toast.LENGTH_SHORT );
+        toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+        toast.show();
     }
 
     private boolean loadDb(){
@@ -161,7 +523,11 @@ public class MainActivity extends AppCompatActivity {
         List<GroupInfo> allTasks = db.getAllTasks();
         allTaskList.addAll(allTasks);
         for(GroupInfo task: allTaskList) detailsMap.put(task.getTask(), task);
-        Toast.makeText(getBaseContext(), String.format("Db Task count = %d", tcount), Toast.LENGTH_SHORT).show();
+
+        Toast toast = Toast.makeText(this,getString(R.string.dbmsg), Toast.LENGTH_SHORT );
+        toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+        toast.show();
+
         return true;
     }
 
@@ -209,10 +575,9 @@ public class MainActivity extends AppCompatActivity {
 
         if (cp<0) cp = allTaskList.get(gp).getDetailsList().size() - 1;
         allTaskList.get(gp).getDetailsList().get(cp).isNew = true;
-        saveFlag = true;
     }
 
-    public void editGroupDialog(final int groupPos){
+    private void editGroupDialog(final int groupPos){
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 
         LinearLayout layout = new LinearLayout(this);
@@ -224,6 +589,8 @@ public class MainActivity extends AppCompatActivity {
 
         layout.setGravity(Gravity.CLIP_VERTICAL);
         layout.setPadding(10,10,10,10);
+        layout.setBackgroundColor(ContextCompat.getColor(getBaseContext(),
+                R.color.colorDialogLayout));
 
         final TextView tv = new TextView(this);
         tv.setText(getString(R.string.editGroupDialogTitle));
@@ -312,17 +679,20 @@ public class MainActivity extends AppCompatActivity {
                 detailsMap.remove(allTaskList.get(groupPos).getTask());
                 db.deleteTask(groupPos, allTaskList.get(groupPos));
                 allTaskList.remove(groupPos);
+                for (int s=0; s<allTaskList.size();s++) {
+                    allTaskList.get(s).setTaskId(s);
+                }
 
                 if (allTaskList.size()<1) {
                     addTasktoExpList("No Name", "No Action", "00:00", 0, -1);
                     db.insertData(0, allTaskList.get(0));
                 }
                 listAdapter.notifyDataSetChanged();
-                saveFlag = true;
             }
         });
 
         AlertDialog edTaskDialog = alertDialogBuilder.create();
+        edTaskDialog.getWindow().setBackgroundDrawableResource(R.color.colorDialog);
         try {
             edTaskDialog.show();
         } catch (Exception e) {
@@ -331,7 +701,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    public void editChildDialog(final int groupPos, final int childPos){
+    private void editChildDialog(final int groupPos, final int childPos){
         final ChildInfo child = allTaskList.get(groupPos).getDetailsList().get(childPos);
 
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
@@ -345,6 +715,8 @@ public class MainActivity extends AppCompatActivity {
 
         layout.setGravity(Gravity.CLIP_VERTICAL);
         layout.setPadding(10,10,10,10);
+        layout.setBackgroundColor(ContextCompat.getColor(getBaseContext(),
+                R.color.colorDialogLayout));
 
         final TextView tv = new TextView(this);
         tv.setText(getString(R.string.editDetail));
@@ -430,11 +802,11 @@ public class MainActivity extends AppCompatActivity {
                     db.insertStep(allTaskList.get(groupPos), 0);
                 }
                 listAdapter.notifyDataSetChanged();
-                saveFlag = true;
             }
         });
 
         AlertDialog edStepDialog = alertDialogBuilder.create();
+        edStepDialog.getWindow().setBackgroundDrawableResource(R.color.colorDialog);
 
         try {
             edStepDialog.show();
@@ -442,5 +814,28 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+    protected void onPause()
+    {
+        stopTimer(false);
+        //tts.shutdown();
+        super.onPause();
+    }
 
+    public void launchJournalApp() {
+
+        final String appPackageName = getApplicationContext().getPackageName();
+
+        Intent intent = getPackageManager().getLaunchIntentForPackage(appPackageName);
+        if (intent != null) {
+
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+
+        } else {
+
+           //Toast
+
+        }
+
+    }
 }

@@ -15,8 +15,8 @@
     </string-array>
 
     <string-array name="defaultDetStringArray0">
-        <item>Lie down on your bed comfortably</item>
-        <item>Ensure that nothing is touching you except sheets, blanket or pillows. Ensure there are no people, pets or noise or music in the room</item>
+        <item>Ensure that you remain undisturbed for the next one hour. Ensure that there are no people, pets or noise or music in the room. Lie down on your bed comfortably</item>
+        <item>Ensure that nothing is touching you except sheets, blanket or pillows</item>
         <item>Be on your back, arms on sides, legs straight and not crossed. Head and shoulders slightly above body level</item>
         <item>Close your eyes, breathe naturally</item>
     </string-array>
@@ -117,7 +117,6 @@
     <string-array name="defaultDetStringArray9">
         <item>I suggest you write down todays events now.</item>
         <item>Do not forget to write any new lessons you learnt.</item>
-        <item>I will open your logbook.</item>
         <item>See you soon.</item>
     </string-array>
 
@@ -129,11 +128,11 @@
 
 
         <item>00:30</item>
-        <item>00:05</item>
-        <item>00:05</item>
-        <item>00:05</item>
-        <item>00:05</item>
-        <item>00:05</item>
+        <item>00:15</item>
+        <item>00:15</item>
+        <item>00:15</item>
+        <item>00:15</item>
+        <item>00:15</item>
         <item>00:10</item>
         <item>00:10</item>
         <item>00:10</item>
@@ -148,12 +147,12 @@
         <item>00:05</item>
 
         <item>00:30</item>
+        <item>00:05</item>
         <item>00:10</item>
-        <item>00:05</item>
-        <item>00:05</item>
-        <item>00:05</item>
-        <item>00:05</item>
-        <item>00:05</item>
+        <item>00:10</item>
+        <item>00:10</item>
+        <item>00:10</item>
+        <item>00:10</item>
         <item>00:05</item>
         <item>00:20</item>
 
@@ -206,7 +205,6 @@
         <item>02:00</item>
 
         <item>05:00</item>
-        <item>00:05</item>
         <item>00:05</item>
         <item>00:05</item>
 

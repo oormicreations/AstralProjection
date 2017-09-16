@@ -33,7 +33,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String CREATE_TASKS_TABLE = "CREATE TABLE " + TABLE_TASKS + "("
-                + KEY_ID + " INTEGER PRIMARY KEY," + KEY_NAME + " TEXT," + KEY_TASKID + " INTEGER" + ")";
+                + KEY_ID + " INTEGER PRIMARY KEY," + KEY_NAME + " TEXT,"
+                + KEY_TASKID + " INTEGER" + ")";
         db.execSQL(CREATE_TASKS_TABLE);
 
         String CREATE_DETAILS_TABLE = "CREATE TABLE " + TABLE_DETAILS + "("
@@ -94,8 +95,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 idx = Integer.parseInt(cursor.getString(2));
                 ntask = Integer.parseInt(cursor.getString(0));
                 if (idx>=at){
-                    selectQuery = "UPDATE " + TABLE_TASKS + " SET " + KEY_TASKID + " = " + "\"" + String.valueOf(idx + 1) + "\"" +
-                            " WHERE " + KEY_ID + " = " + "\"" + String.valueOf(ntask) + "\"";
+                    selectQuery = "UPDATE " + TABLE_TASKS + " SET " + KEY_TASKID + " = "
+                            + "\"" + String.valueOf(idx + 1) + "\"" + " WHERE " + KEY_ID
+                            + " = " + "\"" + String.valueOf(ntask) + "\"";
                     db.execSQL(selectQuery);
                 }
                 //ntask++;
@@ -114,8 +116,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 idx = Integer.parseInt(cursor.getString(3));
                 ntask = Integer.parseInt(cursor.getString(0));
                 if (idx>=at){
-                    selectQuery = "UPDATE " + TABLE_DETAILS + " SET " + KEY_TASKID + " = " + "\"" + String.valueOf(idx + 1) + "\""  +
-                    " WHERE " + KEY_ID + " = " + "\"" + String.valueOf(ntask) + "\"";
+                    selectQuery = "UPDATE " + TABLE_DETAILS + " SET " + KEY_TASKID + " = "
+                            + "\"" + String.valueOf(idx + 1) + "\""  + " WHERE " + KEY_ID
+                            + " = " + "\"" + String.valueOf(ntask) + "\"";
                     db.execSQL(selectQuery);
                    }
                 //ntask++;
@@ -126,20 +129,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         addData(task);
         db.close();
     }
-
-/*
-    GroupInfo getTask(int id) {
-        SQLiteDatabase db = this.getReadableDatabase();
-
-        Cursor cursor = db.query(TABLE_TASKS, new String[] { KEY_ID, KEY_NAME }, KEY_ID + "=?",
-                new String[] { String.valueOf(id) }, null, null, null, null);
-        if (cursor != null)
-            cursor.moveToFirst();
-
-        GroupInfo task = new GroupInfo();
-        return task;
-    }
-*/
 
     public List<GroupInfo> getAllTasks() {
         List<GroupInfo> taskList = new ArrayList<GroupInfo>();
@@ -183,13 +172,15 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         ContentValues values = new ContentValues();
         values.put(KEY_NAME, task.getTask());
         //return db.update(TABLE_TASKS, values, KEY_ID + " = ?", new String[] { "ID" });
-        return db.update(TABLE_TASKS, values, KEY_TASKID + String.format(" = %d", task.getId()), null);
+        return db.update(TABLE_TASKS, values,
+                KEY_TASKID + String.format(" = %d", task.getId()), null);
     }
 
     public void insertStep(GroupInfo task, int at) {
         SQLiteDatabase db = this.getWritableDatabase();
         //update all seq in details
-        String selectQuery = "SELECT  * FROM " + TABLE_DETAILS + " WHERE " + KEY_TASKID + " = " + task.getId();
+        String selectQuery = "SELECT  * FROM " + TABLE_DETAILS + " WHERE "
+                + KEY_TASKID + " = " + task.getId();
         Cursor cursor = db.rawQuery(selectQuery, null);
         int seq = 0;
         int nstep = 1;
@@ -200,8 +191,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 seq = Integer.parseInt(cursor.getString(4));
                 nstep = Integer.parseInt(cursor.getString(0));
                 if (seq>=at){
-                    selectQuery = "UPDATE " + TABLE_DETAILS + " SET " + KEY_SEQ + " = " + "\"" + String.valueOf(seq + 1) + "\""  +
-                            " WHERE " + KEY_ID + " = " + "\"" + String.valueOf(nstep) + "\"";
+                    selectQuery = "UPDATE " + TABLE_DETAILS + " SET " + KEY_SEQ + " = " + "\""
+                            + String.valueOf(seq + 1) + "\""  + " WHERE " + KEY_ID + " = " + "\""
+                            + String.valueOf(nstep) + "\"";
                     db.execSQL(selectQuery);
                 }
             } while (cursor.moveToNext());
@@ -224,7 +216,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                         String.valueOf(task.getDetailsList().get(at).getSequence()) });
 
         //update all seq in details
-        String selectQuery = "SELECT  * FROM " + TABLE_DETAILS + " WHERE " + KEY_TASKID + " = " + task.getId();
+        String selectQuery = "SELECT  * FROM " + TABLE_DETAILS + " WHERE "
+                + KEY_TASKID + " = " + task.getId();
         Cursor cursor = db.rawQuery(selectQuery, null);
         int seq = 0;
         int nstep = 1;
@@ -235,8 +228,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 seq = Integer.parseInt(cursor.getString(4));
                 nstep = Integer.parseInt(cursor.getString(0));
                 if (seq>=at){
-                    selectQuery = "UPDATE " + TABLE_DETAILS + " SET " + KEY_SEQ + " = " + "\"" + String.valueOf(seq - 1) + "\""  +
-                            " WHERE " + KEY_ID + " = " + "\"" + String.valueOf(nstep) + "\"";
+                    selectQuery = "UPDATE " + TABLE_DETAILS + " SET " + KEY_SEQ + " = " + "\""
+                            + String.valueOf(seq - 1) + "\""  + " WHERE " + KEY_ID + " = " + "\""
+                            + String.valueOf(nstep) + "\"";
                     db.execSQL(selectQuery);
                 }
             } while (cursor.moveToNext());
@@ -253,18 +247,20 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         int tseq = task.getDetailsList().get(pos).getSequence();
 
         //db.update(TABLE_DETAILS, values, KEY_TASKID + String.format(" = %d", task.getId()), null);
-        String selectQuery = "UPDATE " + TABLE_DETAILS + " SET " + KEY_DET + " = " + "\"" + tname + "\""  +
-                " WHERE " + KEY_TASKID + " = " + tid + " AND " + KEY_SEQ + " = " + tseq;
+        String selectQuery = "UPDATE " + TABLE_DETAILS + " SET " + KEY_DET + " = "
+                + "\"" + tname + "\""  + " WHERE " + KEY_TASKID + " = " + tid + " AND "
+                + KEY_SEQ + " = " + tseq;
         db.execSQL(selectQuery);
-        selectQuery = "UPDATE " + TABLE_DETAILS + " SET " + KEY_DELAY + " = " + "\"" + tdelay + "\""  +
-                " WHERE " + KEY_TASKID + " = " + tid + " AND " + KEY_SEQ + " = " + tseq;
+        selectQuery = "UPDATE " + TABLE_DETAILS + " SET " + KEY_DELAY + " = " + "\""
+                + tdelay + "\""  + " WHERE " + KEY_TASKID + " = " + tid + " AND "
+                + KEY_SEQ + " = " + tseq;
         db.execSQL(selectQuery);
     }
 
     public void deleteTask(int at, GroupInfo task) {
         SQLiteDatabase db = this.getWritableDatabase();
-        db.delete(TABLE_DETAILS, KEY_TASKID + " = ?", new String[] { String.valueOf(task.getId()) });
-        db.delete(TABLE_TASKS, KEY_NAME + " = ?", new String[] { task.getTask() });
+        db.delete(TABLE_DETAILS, KEY_TASKID + " = ?", new String[]{ String.valueOf(task.getId()) });
+        db.delete(TABLE_TASKS, KEY_TASKID + " = ?", new String[] { String.valueOf(task.getId()) });
 
         //update all taskids in tasks
         String selectQuery = "SELECT  * FROM " + TABLE_TASKS + " ORDER BY " + KEY_ID + " ASC";
@@ -276,11 +272,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 idx = Integer.parseInt(cursor.getString(2));
                 ntask = Integer.parseInt(cursor.getString(0));
                 if (idx>=at){
-                    selectQuery = "UPDATE " + TABLE_TASKS + " SET " + KEY_TASKID + " = " + "\"" + String.valueOf(idx - 1) + "\"" +
-                            " WHERE " + KEY_ID + " = " + "\"" + String.valueOf(ntask) + "\"";
+                    selectQuery = "UPDATE " + TABLE_TASKS + " SET " + KEY_TASKID + " = " + "\""
+                            + String.valueOf(idx - 1) + "\"" + " WHERE " + KEY_ID + " = " + "\""
+                            + String.valueOf(ntask) + "\"";
                     db.execSQL(selectQuery);
                 }
-                //ntask++;
 
             } while (cursor.moveToNext());
         }
@@ -296,11 +292,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 idx = Integer.parseInt(cursor.getString(3));
                 ntask = Integer.parseInt(cursor.getString(0));
                 if (idx>=at){
-                    selectQuery = "UPDATE " + TABLE_DETAILS + " SET " + KEY_TASKID + " = " + "\"" + String.valueOf(idx - 1) + "\""  +
-                            " WHERE " + KEY_ID + " = " + "\"" + String.valueOf(ntask) + "\"";
+                    selectQuery = "UPDATE " + TABLE_DETAILS + " SET " + KEY_TASKID + " = " + "\""
+                            + String.valueOf(idx - 1) + "\""  + " WHERE " + KEY_ID + " = " + "\""
+                            + String.valueOf(ntask) + "\"";
                     db.execSQL(selectQuery);
                 }
-                //ntask++;
 
             } while (cursor.moveToNext());
         }
