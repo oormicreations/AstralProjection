@@ -8,13 +8,13 @@ import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.ShareActionProvider;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -49,85 +49,80 @@ public class JournalActivity extends AppCompatActivity {
 
         newPage();
 
-
-/*
-        editPage.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if (isNewPage) saveRequired = true;
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-
-            }
-        });
-*/
-
-
-        ImageButton mbuttonJournalNew = (ImageButton) findViewById(R.id.imageButtonJournalNew);
+        final ImageButton mbuttonJournalNew = (ImageButton) findViewById(R.id.imageButtonJournalNew);
         mbuttonJournalNew.setOnClickListener(
                 new View.OnClickListener(){
                     @Override
                     public void onClick (View view){
                         newPage();
+                        mbuttonJournalNew.startAnimation(AnimationUtils.
+                                loadAnimation(JournalActivity.this, R.anim.buttonpress));
                     }
                 });
 
 
-        ImageButton mbuttonJournalNext = (ImageButton) findViewById(R.id.imageButtonJournalNext);
+        final ImageButton mbuttonJournalNext = (ImageButton) findViewById(R.id.imageButtonJournalNext);
         mbuttonJournalNext.setOnClickListener(
                 new View.OnClickListener(){
                     @Override
                     public void onClick (View view){
-                        nextPage();
+                        nPage++;
+                        showPage();
+                        mbuttonJournalNext.startAnimation(AnimationUtils.
+                                loadAnimation(JournalActivity.this, R.anim.buttonpress));
                     }
                 });
 
-        ImageButton mbuttonJournalPrevious = (ImageButton) findViewById(R.id.imageButtonJournalPrevious);
+        final ImageButton mbuttonJournalPrevious = (ImageButton) findViewById(R.id.imageButtonJournalPrevious);
         mbuttonJournalPrevious.setOnClickListener(
                 new View.OnClickListener(){
                     @Override
                     public void onClick (View view){
-                        prePage();
+                        nPage--;
+                        showPage();
+                        mbuttonJournalPrevious.startAnimation(AnimationUtils.
+                                loadAnimation(JournalActivity.this, R.anim.buttonpress));
                     }
                 });
 
-        ImageButton mbuttonJournalDelete = (ImageButton) findViewById(R.id.imageButtonJournalDelete);
+        final ImageButton mbuttonJournalDelete = (ImageButton) findViewById(R.id.imageButtonJournalDelete);
         mbuttonJournalDelete.setOnClickListener(
                 new View.OnClickListener(){
                     @Override
                     public void onClick (View view){
                         delPage();
+                        mbuttonJournalDelete.startAnimation(AnimationUtils.
+                                loadAnimation(JournalActivity.this, R.anim.buttonpress));
                     }
                 });
 
+        mbuttonJournalNew.setColorFilter(Color.argb(50, 255, 0, 200));
+        mbuttonJournalNext.setColorFilter(Color.argb(50, 255, 0, 200));
+        mbuttonJournalPrevious.setColorFilter(Color.argb(50, 255, 0, 200));
+        mbuttonJournalDelete.setColorFilter(Color.argb(50, 255, 0, 200));
 
     }
 
     private void newPage() {
-        journalDate = new SimpleDateFormat("yyyy/MM/dd hh:mm a").format(new Date());
+        savePage();
+        journalDate = new SimpleDateFormat("yyyy/MM/dd HH:mm").format(new Date());
         newText = "AP Journal Entry\nDate: " + journalDate + "\n\nKeywords: \n\nDescription: ";
         editPage.setText(newText);
         editPage.setSelection(editPage.getText().length()-15);
         editPage.setEnabled(true);
         isNewPage = true;
         nPage = totalPages + 1;
+        tvMsg.setText("New Page. Pages in journal : " + String.valueOf(totalPages));
     }
 
-    private void nextPage() {
+    private void showPage() {
         savePage();
-    }
-
-    private void prePage() {
-        savePage();
-        nPage--;
+        if (totalPages<1) {
+            newPage();
+            return;
+        }
         if (nPage<1) nPage = 1;
+        if (nPage>totalPages) nPage = totalPages;
         editPage.setEnabled(false);
         editPage.setText(jdb.getPage(nPage));
         isNewPage = false;
@@ -135,6 +130,16 @@ public class JournalActivity extends AppCompatActivity {
     }
 
     private void delPage() {
+        if (isNewPage) {
+            newPage();
+            return;
+        }
+
+        jdb.deletePage(nPage);
+        totalPages = jdb.getPageCount();
+        nPage++;
+        showPage();
+        tvMsg.setText("Deleted Page. Page " + String.valueOf(nPage) + " of " + totalPages);
     }
 
     protected void onPause()

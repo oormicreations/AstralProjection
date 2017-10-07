@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -279,6 +280,10 @@ public class MainActivity extends AppCompatActivity {
                         launchJournal();
                     }
                 });
+
+        mbuttonSet.setColorFilter(Color.argb(60, 200, 0, 200));
+        mbuttonJournal.setColorFilter(Color.argb(60, 200, 0, 200));
+        resetButton.setColorFilter(Color.argb(60, 200, 0, 200));
 
     }
 
