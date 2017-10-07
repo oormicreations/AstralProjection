@@ -1,4 +1,4 @@
-package in.oormi.astralprojection;
+package in.oormi.apguide;
 
 import org.junit.Test;
 

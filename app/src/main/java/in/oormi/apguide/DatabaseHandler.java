@@ -1,10 +1,9 @@
-package in.oormi.astralprojection;
+package in.oormi.apguide;
 
 
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -41,6 +40,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                 + KEY_ID + " INTEGER PRIMARY KEY," + KEY_DET + " TEXT,"
                 + KEY_DELAY + " TEXT," + KEY_TASKID + " INTEGER,"  + KEY_SEQ + " INTEGER" +")";
         db.execSQL(CREATE_DETAILS_TABLE);
+
     }
 
     // Upgrading database

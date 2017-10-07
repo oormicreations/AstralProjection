@@ -1,4 +1,4 @@
-package in.oormi.astralprojection;
+package in.oormi.apguide;
 import java.util.ArrayList;
 
 public class GroupInfo {

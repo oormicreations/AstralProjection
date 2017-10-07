@@ -2,8 +2,8 @@
 <resources>
 
     <string-array name="defaultTasksStringArray">
+        <item>Prepare</item>
         <item>Relax</item>
-        <item>Progressive Muscle Relaxation</item>
         <item>Invocations</item>
         <item>Turn Inwards</item>
         <item>Create a Gateway</item>
@@ -15,31 +15,31 @@
     </string-array>
 
     <string-array name="defaultDetStringArray0">
-        <item>Ensure that you remain undisturbed for the next one hour. Ensure that there are no people, pets or noise or music in the room. Lie down on your bed comfortably</item>
-        <item>Ensure that nothing is touching you except sheets, blanket or pillows</item>
-        <item>Be on your back, arms on sides, legs straight and not crossed. Head and shoulders slightly above body level</item>
-        <item>Close your eyes, breathe naturally</item>
+        <item>Ensure that you remain undisturbed for the next one hour. Ensure that there are no people, pets or noise or music in the room. Lie down on your bed comfortably.</item>
+        <item>Ensure that nothing is touching you except sheets, blanket or pillows.</item>
+        <item>Be on your back, arms on sides, legs straight and not crossed. Head and shoulders slightly above body level.</item>
+        <item>Close your eyes, breathe naturally.</item>
     </string-array>
 
     <string-array name="defaultDetStringArray1">
-        <item>Relax all your muscles one by one without lifting any body parts. Lets start now</item>
-        <item>Tense your feet muscles. Moderately, not too tight, not too loose</item>
-        <item>Relax them</item>
-        <item>Tense your calf muscles. Hold for a second</item>
-        <item>Relax them</item>
-        <item>Tense your thigh muscles. Hold. Relax them</item>
-        <item>Tense your butt muscles. Hold. Relax them</item>
-        <item>Tense your abdominal muscles. Hold. Relax them</item>
-        <item>Tense your lower back muscles. Hold. Relax them</item>
-        <item>Tense your chest muscles. Hold. Relax them</item>
-        <item>Tense your upper back muscles. Hold. Relax them</item>
-        <item>Tense your shoulder muscles. Hold. Relax them</item>
-        <item>Tense your arm muscles. Hold. Relax them</item>
-        <item>Tense your hand muscles. Make a fist. Hold. Relax them</item>
-        <item>Tense your neck muscles. Hold. Relax them</item>
-        <item>Tense your jaw and head muscles. Hold. Relax them</item>
-        <item>Take a deep breath. Exhale</item>
-        <item>You are deeply relaxed now</item>
+        <item>Relax all your muscles one by one without moving. Lets start now.</item>
+        <item>Tense your feet muscles. Moderately, not too tight, not too loose.</item>
+        <item>Relax them.</item>
+        <item>Tense your calf muscles. Hold for a second.</item>
+        <item>Relax them.</item>
+        <item>Tense your thigh muscles. Hold. Relax them.</item>
+        <item>Tense your butt muscles. Hold. Relax them.</item>
+        <item>Tense your abdominal muscles. Hold. Relax them.</item>
+        <item>Tense your lower back muscles. Hold. Relax them.</item>
+        <item>Tense your chest muscles. Hold. Relax them.</item>
+        <item>Tense your upper back muscles. Hold. Relax them.</item>
+        <item>Tense your shoulder muscles. Hold. Relax them.</item>
+        <item>Tense your arm muscles. Hold. Relax them.</item>
+        <item>Tense your hand muscles. Make a fist. Hold. Relax them.</item>
+        <item>Tense your neck muscles. Hold. Relax them.</item>
+        <item>Tense your jaw and head muscles. Hold. Relax them.</item>
+        <item>Take a deep breath. Exhale.</item>
+        <item>You are deeply relaxed now.</item>
     </string-array>
 
     <string-array name="defaultDetStringArray2">
@@ -50,7 +50,7 @@
         <item>May this journey bring me needed knowledge and wisdom.</item>
         <item>May this adventure benefit all and everything.</item>
         <item>Thank you.</item>
-        <item>Feel the blessings of your respected one in your body, as blissful shiver.</item>
+        <item>Feel the blessings of your respected one in your body, as a blissful shiver.</item>
         <item>You are now safe and well protected.</item>
     </string-array>
 
@@ -89,7 +89,7 @@
     <string-array name="defaultDetStringArray6">
         <item>Make an intention to visit the place you wish to visit. Hold this idea firmly.</item>
         <item>Let your guide know your intention.</item>
-        <item>Hear your own voice saying it.</item>
+        <item>Hear your own voice saying your intention.</item>
         <item>If you having nothing specific, ask your guide to take you to any place where you can learn.</item>
         <item>Let the guide decide.</item>
     </string-array>
@@ -108,7 +108,7 @@
         <item>Remember, you were lying down in this room. Come here.</item>
         <item>Become aware of darkness behind your eyes.</item>
         <item>Wiggle your big toe.</item>
-        <item>Move your feet and hand.</item>
+        <item>Move your feet and hands.</item>
         <item>Open your eyes slowly.</item>
         <item>Stay here.</item>
         <item>Recall what happened.</item>
@@ -148,7 +148,7 @@
 
         <item>00:30</item>
         <item>00:05</item>
-        <item>00:10</item>
+        <item>00:05</item>
         <item>00:10</item>
         <item>00:10</item>
         <item>00:10</item>

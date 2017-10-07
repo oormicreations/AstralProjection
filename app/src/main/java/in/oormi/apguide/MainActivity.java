@@ -1,17 +1,25 @@
-package in.oormi.astralprojection;
+package in.oormi.apguide;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
+import android.os.PowerManager;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.ShareActionProvider;
 import android.text.InputType;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -21,6 +29,7 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -29,6 +38,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.nio.channels.FileChannel;
 import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -98,6 +111,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_main);
+        final ImageView ivRay = (ImageView) findViewById(R.id.imageViewRay);
+        ivRay.setVisibility(View.INVISIBLE);
+
 
         if(!loadDb()) initData();
         Toast toast = Toast.makeText(this,getString(R.string.longpress), Toast.LENGTH_SHORT );
@@ -124,6 +140,11 @@ public class MainActivity extends AppCompatActivity {
                             Toast.LENGTH_SHORT).show();
             }
         });
+
+        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK |
+                PowerManager.ACQUIRE_CAUSES_WAKEUP, "APAppTag");
+        wl.acquire();
 
         tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
             @Override
@@ -194,7 +215,9 @@ public class MainActivity extends AppCompatActivity {
                     startTimer();
                 } else {
                     stopTimer(true);
-                    //toggle.clearAnimation();
+                    final Animation animation = AnimationUtils.loadAnimation(MainActivity.this,
+                            R.anim.scaledn);
+                    toggle.startAnimation(animation);
                 }
             }
         });
@@ -209,8 +232,9 @@ public class MainActivity extends AppCompatActivity {
                         switch (which){
                             case DialogInterface.BUTTON_POSITIVE:
                                 //Yes button clicked
-                                stopTimer(false);
+                                stopTimer(true);
                                 toggle.setChecked(false);
+                                backupDB();
 
                                 allTaskList.clear();
                                 detailsMap.clear();
@@ -239,9 +263,20 @@ public class MainActivity extends AppCompatActivity {
                 new View.OnClickListener(){
                     @Override
                     public void onClick (View view){
-                        stopTimer(false);
+                        stopTimer(true);
                         toggle.setChecked(false);
                         editSettingDialog();
+                    }
+                });
+
+        ImageButton mbuttonJournal = (ImageButton) findViewById(R.id.imageButtonJournal);
+        mbuttonJournal.setOnClickListener(
+                new View.OnClickListener(){
+                    @Override
+                    public void onClick (View view){
+                        stopTimer(true);
+                        toggle.setChecked(false);
+                        launchJournal();
                     }
                 });
 
@@ -272,7 +307,7 @@ public class MainActivity extends AppCompatActivity {
         alertDialogBuilder.setCustomTitle(tv);
 
         final TextView tvSesSpeed = new TextView(this);
-        tvSesSpeed.setText("Session Speed");
+        tvSesSpeed.setText(R.string.sspeed);
         tvSesSpeed.setPadding(80,10,10,10);
         layout.addView(tvSesSpeed);
 
@@ -282,7 +317,7 @@ public class MainActivity extends AppCompatActivity {
         layout.addView(sessionSpeedBar);
 
         final TextView tvSpeechRate = new TextView(this);
-        tvSpeechRate.setText("Speech Rate");
+        tvSpeechRate.setText(R.string.srate);
         tvSpeechRate.setPadding(80,10,10,10);
         layout.addView(tvSpeechRate);
 
@@ -292,12 +327,12 @@ public class MainActivity extends AppCompatActivity {
         layout.addView(speechRateBar);
 
         final TextView tvVoice = new TextView(this);
-        tvVoice.setText("Voice Locale");
+        tvVoice.setText(R.string.loc);
         tvVoice.setPadding(80,10,10,10);
         layout.addView(tvVoice);
 
         final RadioButton rb1 = new RadioButton(this);
-        rb1.setText("Default");
+        rb1.setText(R.string.locdef);
         rb1.setChecked(false);
         final RadioButton rb2 = new RadioButton(this);
         rb2.setText("EN-US");
@@ -349,7 +384,7 @@ public class MainActivity extends AppCompatActivity {
         sessionSpeedBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                tvSesSpeed.setText("Session Speed : " + String.valueOf(progress) + " %");
+                tvSesSpeed.setText(getString(R.string.sspeedval) + String.valueOf(progress) + " %");
             }
 
             @Override
@@ -366,7 +401,7 @@ public class MainActivity extends AppCompatActivity {
         speechRateBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                tvSpeechRate.setText("Speech Rate : " + String.valueOf(progress) + " %");
+                tvSpeechRate.setText(getString(R.string.srateval) + String.valueOf(progress) + " %");
             }
 
             @Override
@@ -385,8 +420,8 @@ public class MainActivity extends AppCompatActivity {
         edSetDialog.getWindow().setBackgroundDrawableResource(R.color.colorDialog);
         sessionSpeedBar.setProgress((int)(sessionSpeed*100.0f));
         speechRateBar.setProgress((int)(speechRate*100.0f));
-        tvSpeechRate.setText("Speech Rate : " + String.valueOf(speechRateBar.getProgress()) + " %");
-        tvSesSpeed.setText("Session Speed : " + String.valueOf(sessionSpeedBar.getProgress()) + " %");
+        tvSpeechRate.setText(getString(R.string.srateval) + String.valueOf(speechRateBar.getProgress()) + " %");
+        tvSesSpeed.setText(getString(R.string.sspeedval) + String.valueOf(sessionSpeedBar.getProgress()) + " %");
         if (locale == Locale.getDefault()) radioGroup.check(rb1.getId());
         if (locale == Locale.US) radioGroup.check(rb2.getId());
         if (locale == Locale.UK) radioGroup.check(rb3.getId());
@@ -412,6 +447,13 @@ public class MainActivity extends AppCompatActivity {
                     R.anim.scaleup);
             toggle.startAnimation(animation);
             animrunning = true;
+
+            final ImageView ivRay = (ImageView) findViewById(R.id.imageViewRay);
+            ivRay.setVisibility(View.VISIBLE);
+            final Animation ivAnim = AnimationUtils.loadAnimation(MainActivity.this,
+                    R.anim.rotate_around_center_point);
+            ivRay.startAnimation(ivAnim);
+
         }
 
     }
@@ -419,12 +461,18 @@ public class MainActivity extends AppCompatActivity {
     private void stopTimer(boolean stopanim) {
         tts.stop();
         timerHandler.removeCallbacks(timerRunnable);
-        final ToggleButton toggle = (ToggleButton) findViewById(R.id.toggleButtonStartStop);
-        toggle.setChecked(false);
         if (stopanim) {
+            final ToggleButton toggle = (ToggleButton) findViewById(R.id.toggleButtonStartStop);
             final Animation animation = AnimationUtils.loadAnimation(MainActivity.this,
                     R.anim.scaledn);
-            toggle.startAnimation(animation);
+            if (toggle.isChecked()) {
+                toggle.startAnimation(animation);
+                toggle.setChecked(false);
+            }
+            final ImageView ivRay = (ImageView) findViewById(R.id.imageViewRay);
+            ivRay.setVisibility(View.INVISIBLE);
+            ivRay.clearAnimation();
+
         }
     }
 
@@ -638,6 +686,7 @@ public class MainActivity extends AppCompatActivity {
 
         alertDialogBuilder.setPositiveButton(R.string.editOk, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
+
                 String etStr1 = etTaskName.getText().toString();
                 String etStr2 = etNewStep.getText().toString();
                 String etStr3 = etTime.getText().toString();
@@ -698,6 +747,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        stopTimer(true);
     }
 
 
@@ -769,6 +819,8 @@ public class MainActivity extends AppCompatActivity {
 
         alertDialogBuilder.setPositiveButton(R.string.editOk, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
+
+
                 String etStr1 = etGroupTitle.getText().toString();
                 String etStr2 = etDetail.getText().toString();
                 String etStr3 = etTime.getText().toString();
@@ -813,29 +865,87 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        stopTimer(true);
     }
     protected void onPause()
     {
-        stopTimer(false);
+        //stopTimer(false);
         //tts.shutdown();
         super.onPause();
     }
 
-    public void launchJournalApp() {
+    private ShareActionProvider mShareActionProvider;
 
-        final String appPackageName = getApplicationContext().getPackageName();
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.infomenu, menu);
 
-        Intent intent = getPackageManager().getLaunchIntentForPackage(appPackageName);
-        if (intent != null) {
+        // Locate MenuItem with ShareActionProvider
+        MenuItem item = menu.findItem(R.id.menu_item_share);
 
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
+        // Fetch and store ShareActionProvider
+        mShareActionProvider = (ShareActionProvider)  MenuItemCompat.getActionProvider(item);
+        Intent shareIntent = new Intent(Intent.ACTION_SEND);
+        shareIntent.setType("text/plain");
+        shareIntent.putExtra(Intent.EXTRA_TEXT,
+                "https://play.google.com/store/apps/details?id=in.oormi.apguide");
+        shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Check out this app!");
+        setShareIntent(shareIntent);
+        return true;
+    }
 
-        } else {
-
-           //Toast
-
+    private void setShareIntent(Intent shareIntent) {
+        if (mShareActionProvider != null) {
+            mShareActionProvider.setShareIntent(shareIntent);
         }
+    }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.info:
+                stopTimer(true);
+                final ToggleButton toggle = (ToggleButton) findViewById(R.id.toggleButtonStartStop);
+                toggle.setChecked(false);
+
+                Intent i = new Intent(this, ResourceShow.class);
+                startActivity(i);
+                break;
+        }
+        return true;
+    }
+
+    public void launchJournal() {
+        stopTimer(true);
+        final ToggleButton toggle = (ToggleButton) findViewById(R.id.toggleButtonStartStop);
+        toggle.setChecked(false);
+        Intent i = new Intent(this, JournalActivity.class);
+        startActivity(i);
+    }
+
+    public void backupDB(){ //may not work
+        try {
+            File sd = Environment.getExternalStorageDirectory();
+            File data = Environment.getDataDirectory();
+
+            if (sd.canWrite()) {
+                String currentDBPath = "//data//in.oormi.apguide//databases//tasksManager";
+                String backupDBPath = "tasksManager";
+                File currentDB = new File(data, currentDBPath);
+                File backupDB = new File(sd, backupDBPath);
+
+                if (currentDB.exists()) {
+                    FileChannel src = new FileInputStream(currentDB).getChannel();
+                    FileChannel dst = new FileOutputStream(backupDB).getChannel();
+                    dst.transferFrom(src, 0, src.size());
+                    src.close();
+                    dst.close();
+                    Toast.makeText(getBaseContext(), backupDB.toString() + " backed up.", Toast.LENGTH_LONG).show();
+                }
+            }
+        } catch (Exception e) {
+            Toast.makeText(getBaseContext(), "Backup DB Failed. " + e.toString(), Toast.LENGTH_SHORT).show();
+        }
     }
 }
