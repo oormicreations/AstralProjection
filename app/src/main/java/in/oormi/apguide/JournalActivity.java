@@ -13,7 +13,6 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -41,7 +40,7 @@ public class JournalActivity extends AppCompatActivity {
 
         tvMsg = (TextView)findViewById(R.id.textViewMesg);
         totalPages = jdb.getPageCount();
-        tvMsg.setText(String.valueOf(totalPages) + " Pages");
+        tvMsg.setText(String.valueOf(totalPages) + getString(R.string.jpages));
 
         editPage = (EditText)findViewById(R.id.editTextPage);
         editPage.setGravity(Gravity.START);
@@ -49,7 +48,8 @@ public class JournalActivity extends AppCompatActivity {
 
         newPage();
 
-        final ImageButton mbuttonJournalNew = (ImageButton) findViewById(R.id.imageButtonJournalNew);
+        final ImageButton mbuttonJournalNew =
+                (ImageButton) findViewById(R.id.imageButtonJournalNew);
         mbuttonJournalNew.setOnClickListener(
                 new View.OnClickListener(){
                     @Override
@@ -61,7 +61,8 @@ public class JournalActivity extends AppCompatActivity {
                 });
 
 
-        final ImageButton mbuttonJournalNext = (ImageButton) findViewById(R.id.imageButtonJournalNext);
+        final ImageButton mbuttonJournalNext =
+                (ImageButton) findViewById(R.id.imageButtonJournalNext);
         mbuttonJournalNext.setOnClickListener(
                 new View.OnClickListener(){
                     @Override
@@ -73,7 +74,8 @@ public class JournalActivity extends AppCompatActivity {
                     }
                 });
 
-        final ImageButton mbuttonJournalPrevious = (ImageButton) findViewById(R.id.imageButtonJournalPrevious);
+        final ImageButton mbuttonJournalPrevious =
+                (ImageButton) findViewById(R.id.imageButtonJournalPrevious);
         mbuttonJournalPrevious.setOnClickListener(
                 new View.OnClickListener(){
                     @Override
@@ -85,7 +87,8 @@ public class JournalActivity extends AppCompatActivity {
                     }
                 });
 
-        final ImageButton mbuttonJournalDelete = (ImageButton) findViewById(R.id.imageButtonJournalDelete);
+        final ImageButton mbuttonJournalDelete =
+                (ImageButton) findViewById(R.id.imageButtonJournalDelete);
         mbuttonJournalDelete.setOnClickListener(
                 new View.OnClickListener(){
                     @Override
@@ -106,13 +109,13 @@ public class JournalActivity extends AppCompatActivity {
     private void newPage() {
         savePage();
         journalDate = new SimpleDateFormat("yyyy/MM/dd HH:mm").format(new Date());
-        newText = "AP Journal Entry\nDate: " + journalDate + "\n\nKeywords: \n\nDescription: ";
+        newText = getString(R.string.jtxt1) + journalDate + getString(R.string.jtxt2);
         editPage.setText(newText);
         editPage.setSelection(editPage.getText().length()-15);
         editPage.setEnabled(true);
         isNewPage = true;
         nPage = totalPages + 1;
-        tvMsg.setText("New Page. Pages in journal : " + String.valueOf(totalPages));
+        tvMsg.setText(getString(R.string.jnew) + String.valueOf(totalPages));
     }
 
     private void showPage() {
@@ -139,7 +142,7 @@ public class JournalActivity extends AppCompatActivity {
         totalPages = jdb.getPageCount();
         nPage++;
         showPage();
-        tvMsg.setText("Deleted Page. Page " + String.valueOf(nPage) + " of " + totalPages);
+        tvMsg.setText(getString(R.string.jdeleted) + String.valueOf(nPage) + " of " + totalPages);
     }
 
     protected void onPause()
@@ -170,7 +173,8 @@ public class JournalActivity extends AppCompatActivity {
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
         shareIntent.putExtra(Intent.EXTRA_TEXT, editPage.getText().toString());
-        shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "My AP Journal Entry - " + journalDate);
+        shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT,
+                getString(R.string.jentrysharetitle) + journalDate);
         setShareIntent(shareIntent);
         return true;
     }
@@ -194,7 +198,9 @@ public class JournalActivity extends AppCompatActivity {
                                 try {
                                     jdb.resetDB();
                                     totalPages = jdb.getPageCount();
-                                    tvMsg.setText("Journal Cleared. " + String.valueOf(totalPages) + " Pages");
+                                    tvMsg.setText(getString(R.string.jcleared)
+                                            + String.valueOf(totalPages)
+                                            + getString(R.string.jpages));
                                     newPage();
                                 } catch (SQLException e) {
                                     e.printStackTrace();
@@ -209,10 +215,10 @@ public class JournalActivity extends AppCompatActivity {
                 };
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(JournalActivity.this);
-                builder.setTitle("Confirm Data Reset");
-                builder.setMessage("All pages will be deleted. Are you sure?")
-                        .setPositiveButton("Yes", dialogClickListener)
-                        .setNegativeButton("No", dialogClickListener).show();
+                builder.setTitle(R.string.confirmreset);
+                builder.setMessage(R.string.resetmsg)
+                        .setPositiveButton(R.string.resetyes, dialogClickListener)
+                        .setNegativeButton(R.string.resetno, dialogClickListener).show();
                 break;
         }
 

@@ -26,4 +26,15 @@
     <string name="srateval">Speech Rate :</string>
     <string name="sspeedval">Session Speed :</string>
     <string name="menu_jounal_set">journalsettings</string>
+    <string name="confirmreset">Confirm Data Reset</string>
+    <string name="resetmsg">All pages will be deleted. Are you sure?</string>
+    <string name="resetyes">Yes</string>
+    <string name="resetno">No</string>
+    <string name="jcleared">Journal Cleared.</string>
+    <string name="jentrysharetitle">My AP Journal Entry -</string>
+    <string name="jdeleted">Deleted Page. Page&#160;</string>
+    <string name="jnew">New Page. Pages in journal :&#160;</string>
+    <string name="jtxt1">AP Journal Entry\nDate:&#160;</string>
+    <string name="jtxt2">\n\nKeywords:&#160; \n\nDescription:&#160;</string>
+    <string name="jpages">Pages</string>
 </resources>
