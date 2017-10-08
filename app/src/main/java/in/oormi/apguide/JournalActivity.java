@@ -112,7 +112,6 @@ public class JournalActivity extends AppCompatActivity {
         newText = getString(R.string.jtxt1) + journalDate + getString(R.string.jtxt2);
         editPage.setText(newText);
         editPage.setSelection(editPage.getText().length()-15);
-        editPage.setEnabled(true);
         isNewPage = true;
         nPage = totalPages + 1;
         tvMsg.setText(getString(R.string.jnew) + String.valueOf(totalPages));
@@ -126,7 +125,6 @@ public class JournalActivity extends AppCompatActivity {
         }
         if (nPage<1) nPage = 1;
         if (nPage>totalPages) nPage = totalPages;
-        editPage.setEnabled(false);
         editPage.setText(jdb.getPage(nPage));
         isNewPage = false;
         tvMsg.setText("Page " + String.valueOf(nPage) + " of " + totalPages);

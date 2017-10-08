@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
     private ExpandableListView simpleExpandableListView;
     public DatabaseHandler db = new DatabaseHandler(this);
     boolean animrunning = false;
+    boolean allExp = true;
     long startTime = 0;
     int gnum = 0;
     int cnum = 0;
@@ -101,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
             if (carryOn){
                 timerHandler.postDelayed(this, getNextDelay());
             }
+            else stopTimer(true);
 
         }
 
@@ -223,7 +225,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        ImageButton resetButton = (ImageButton) findViewById(R.id.imageButtonReset);
+        final ImageButton resetButton = (ImageButton) findViewById(R.id.imageButtonReset);
         resetButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -256,10 +258,13 @@ public class MainActivity extends AppCompatActivity {
                 builder.setMessage("All changes will be lost. Are you sure?")
                         .setPositiveButton("Yes", dialogClickListener)
                         .setNegativeButton("No", dialogClickListener).show();
+                resetButton.startAnimation(AnimationUtils.
+                        loadAnimation(MainActivity.this, R.anim.buttonpress));
+
             }
         });
 
-        ImageButton mbuttonSet = (ImageButton) findViewById(R.id.imageButtonSet);
+        final ImageButton mbuttonSet = (ImageButton) findViewById(R.id.imageButtonSet);
         mbuttonSet.setOnClickListener(
                 new View.OnClickListener(){
                     @Override
@@ -267,22 +272,39 @@ public class MainActivity extends AppCompatActivity {
                         stopTimer(true);
                         toggle.setChecked(false);
                         editSettingDialog();
+                        mbuttonSet.startAnimation(AnimationUtils.
+                                loadAnimation(MainActivity.this, R.anim.buttonpress));
                     }
                 });
 
-        ImageButton mbuttonJournal = (ImageButton) findViewById(R.id.imageButtonJournal);
+        final ImageButton mbuttonJournal = (ImageButton) findViewById(R.id.imageButtonJournal);
         mbuttonJournal.setOnClickListener(
                 new View.OnClickListener(){
                     @Override
                     public void onClick (View view){
                         stopTimer(true);
                         toggle.setChecked(false);
+                        mbuttonJournal.startAnimation(AnimationUtils.
+                                loadAnimation(MainActivity.this, R.anim.buttonpress));
                         launchJournal();
+                    }
+                });
+
+        final ImageButton mbuttonEC = (ImageButton) findViewById(R.id.imageButtonEC);
+        mbuttonEC.setOnClickListener(
+                new View.OnClickListener(){
+                    @Override
+                    public void onClick (View view){
+                        if (allExp) {expandAll(); allExp = false;}
+                        else {collapseAll(); allExp = true;}
+                        mbuttonEC.startAnimation(AnimationUtils.
+                                loadAnimation(MainActivity.this, R.anim.buttonpress));
                     }
                 });
 
         mbuttonSet.setColorFilter(Color.argb(60, 200, 0, 200));
         mbuttonJournal.setColorFilter(Color.argb(60, 200, 0, 200));
+        mbuttonEC.setColorFilter(Color.argb(60, 200, 0, 200));
         resetButton.setColorFilter(Color.argb(60, 200, 0, 200));
 
     }
@@ -421,10 +443,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-            AlertDialog edSetDialog = alertDialogBuilder.create();
+        AlertDialog edSetDialog = alertDialogBuilder.create();
         edSetDialog.getWindow().setBackgroundDrawableResource(R.color.colorDialog);
-        sessionSpeedBar.setProgress((int)(sessionSpeed*100.0f));
-        speechRateBar.setProgress((int)(speechRate*100.0f));
+        sessionSpeedBar.setProgress((int) (sessionSpeed * 100.0f));
+        speechRateBar.setProgress((int) (speechRate * 100.0f));
         tvSpeechRate.setText(getString(R.string.srateval) + String.valueOf(speechRateBar.getProgress()) + " %");
         tvSesSpeed.setText(getString(R.string.sspeedval) + String.valueOf(sessionSpeedBar.getProgress()) + " %");
         if (locale == Locale.getDefault()) radioGroup.check(rb1.getId());
@@ -500,6 +522,7 @@ public class MainActivity extends AppCompatActivity {
 
     private long getNextDelay() {
         ChildInfo child = allTaskList.get(gnum).getDetailsList().get(cnum);
+
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
         Date mDate = null;
         Date mDate0 = null;

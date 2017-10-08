@@ -70,7 +70,7 @@
         android:layout_centerHorizontal="true"
         android:layout_centerVertical="true"
         android:layout_marginBottom="8dp"
-        android:layout_marginLeft="8dp"
+        android:layout_marginLeft="16dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         android:background="@null"
@@ -78,7 +78,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/listviewsession"
-        app:layout_constraintVertical_bias="0.453" />
+        app:layout_constraintVertical_bias="0.375" />
 
     <ImageButton
         android:layout_width="wrap_content"
@@ -88,13 +88,13 @@
         android:layout_centerHorizontal="true"
         android:src="@drawable/apreset"
         android:background="@null"
-        android:layout_marginRight="8dp"
+        android:layout_marginRight="16dp"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         android:layout_marginBottom="8dp"
         android:layout_marginTop="8dp"
         app:layout_constraintTop_toBottomOf="@+id/listviewsession"
-        app:layout_constraintVertical_bias="0.458"
+        app:layout_constraintVertical_bias="0.569"
         android:layout_marginEnd="8dp" />
 
     <ImageButton
@@ -115,6 +115,26 @@
         android:layout_marginLeft="0dp"
         app:layout_constraintRight_toLeftOf="@+id/toggleButtonStartStop"
         android:layout_marginRight="0dp" />
+
+    <ImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/imageButtonEC"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:src="@drawable/apexpcoll"
+        android:background="@null"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@+id/listviewsession"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintLeft_toRightOf="@+id/toggleButtonStartStop"
+        android:layout_marginLeft="8dp"
+        app:layout_constraintRight_toLeftOf="@+id/imageButtonReset"
+        android:layout_marginRight="8dp"
+        app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintHorizontal_bias="0.041" />
 
     <ImageView
         android:id="@+id/imageViewRay"
