@@ -73,19 +73,26 @@ public class CustomAdapter extends BaseExpandableListAdapter {
        if (detailInfo.hasError) {
             ObjectAnimator colorFade = ObjectAnimator.ofObject(view, "backgroundColor",
                     new ArgbEvaluator(), Color.argb(255, 255, 255, 255), 0xffffeecc);
-            colorFade.setDuration(2000);
+            colorFade.setDuration(1000);
             colorFade.start();
         }
-        else {
-            if (detailInfo.isNew) {
+        else if (detailInfo.isNew) {
 
                 ObjectAnimator colorFade1 = ObjectAnimator.ofObject(view, "backgroundColor",
                         new ArgbEvaluator(), Color.argb(255, 255, 255, 255), 0xFFFDEBFF);
-                colorFade1.setDuration(2000);
+                colorFade1.setDuration(1000);
                 colorFade1.start();
 
             }
+         else {
+            if (!detailInfo.getEnabled()) {
+                ObjectAnimator colorFade = ObjectAnimator.ofObject(view, "backgroundColor",
+                        new ArgbEvaluator(), Color.argb(255, 255, 255, 255), 0xffddddde);
+                colorFade.setDuration(1000);
+                colorFade.start();
+            }
         }
+
         return view;
     }
 

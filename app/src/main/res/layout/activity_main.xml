@@ -30,7 +30,7 @@
         android:layout_marginTop="8dp"
         android:childDivider="#e7c9ea"
         android:divider="#c9aaff"
-        android:dividerHeight="3dp"
+        android:dividerHeight="2dp"
         android:padding="8dp"
         android:scrollbarStyle="outsideOverlay"
         app:layout_constraintBottom_toTopOf="@+id/toggleButtonStartStop"

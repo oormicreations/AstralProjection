@@ -1,11 +1,13 @@
 package in.oormi.apguide;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -17,6 +19,8 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.ShareActionProvider;
 import android.text.InputType;
+import android.util.Log;
+import android.util.Xml;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -25,6 +29,7 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -39,9 +44,18 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
 
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserException;
+import org.xmlpull.v1.XmlPullParserFactory;
+import org.xmlpull.v1.XmlSerializer;
+
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.sql.SQLException;
 import java.text.ParseException;
@@ -54,6 +68,9 @@ import java.util.Locale;
 import java.util.StringTokenizer;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final int CURRENT_DB_VER = 2;
+    private static final String APG_PRESET_VERSION = "1";
 
     private LinkedHashMap<String, GroupInfo> detailsMap = new LinkedHashMap<String, GroupInfo>();
     private ArrayList<GroupInfo> allTaskList = new ArrayList<GroupInfo>();
@@ -71,6 +88,9 @@ public class MainActivity extends AppCompatActivity {
     Locale locale = Locale.getDefault();
     boolean doneSpeaking = true;
     float sessionSpeed = 1.0f;
+
+    private static final int READ_REQUEST_CODE = 1042;
+    private static final int WRITE_REQUEST_CODE = 1043;
 
     //runs without a timer by reposting this handler at the end of the runnable
     Handler timerHandler = new Handler();
@@ -466,6 +486,7 @@ public class MainActivity extends AppCompatActivity {
         startTime = System.currentTimeMillis();
         gnum = 0;
         cnum = 0;
+        doneSpeaking = true;
         timerHandler.postDelayed(timerRunnable, getNextDelay());
 
         if (!animrunning) {
@@ -504,8 +525,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void speakInstruction(){
-        ChildInfo child = allTaskList.get(gnum).getDetailsList().get(cnum);
-/*
+/*      //useful for checking if uttered on right time
         long millis = System.currentTimeMillis() - startTime;
         int seconds = (int) (millis / 1000);
         int minutes = seconds / 60;
@@ -515,9 +535,12 @@ public class MainActivity extends AppCompatActivity {
         str = str + "\n" + allTaskList.get(gnum).getTask() + ":: " + child.getDescription();
         Toast.makeText(getBaseContext(), str, Toast.LENGTH_SHORT).show();
 */
-        doneSpeaking = false;
-        tts.speak(child.getDescription(), TextToSpeech.QUEUE_FLUSH, null,
-                TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+        ChildInfo child = allTaskList.get(gnum).getDetailsList().get(cnum);
+        doneSpeaking = !child.getEnabled();
+        if (child.getEnabled()) {
+            tts.speak(child.getDescription(), TextToSpeech.QUEUE_FLUSH, null,
+                    TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+        }
     }
 
     private long getNextDelay() {
@@ -533,7 +556,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
         float next = (float)(mDate.getTime() - mDate0.getTime())/sessionSpeed;
-        long kk = (long)next;
+        //long kk = (long)next;
         return (long) next;
     }
 
@@ -594,6 +617,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean loadDb(){
+        if (db.getVer() != CURRENT_DB_VER) return false;
         int tcount = db.getTaskCount();
         if (tcount<1) return false;
         List<GroupInfo> allTasks = db.getAllTasks();
@@ -650,7 +674,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         if (cp<0) cp = allTaskList.get(gp).getDetailsList().size() - 1;
-        allTaskList.get(gp).getDetailsList().get(cp).isNew = true;
+        boolean enabled = allTaskList.get(gp).getDetailsList().get(cp).getEnabled();
+        allTaskList.get(gp).getDetailsList().get(cp).isNew = enabled;
     }
 
     private void editGroupDialog(final int groupPos){
@@ -664,7 +689,7 @@ public class MainActivity extends AppCompatActivity {
         layout.setLayoutParams(params);
 
         layout.setGravity(Gravity.CLIP_VERTICAL);
-        layout.setPadding(10,10,10,10);
+        layout.setPadding(40,10,40,10);
         layout.setBackgroundColor(ContextCompat.getColor(getBaseContext(),
                 R.color.colorDialogLayout));
 
@@ -691,6 +716,30 @@ public class MainActivity extends AppCompatActivity {
         etTime.setHint(R.string.hintTime);
         etTime.setInputType(InputType.TYPE_DATETIME_VARIATION_TIME | InputType.TYPE_CLASS_DATETIME);
         layout.addView(etTime);
+
+        final RadioButton rb1 = new RadioButton(this);
+        rb1.setText("As is");
+        rb1.setChecked(true);
+        final RadioButton rb2 = new RadioButton(this);
+        rb2.setText("UnMute");
+        rb2.setChecked(false);
+        final RadioButton rb3 = new RadioButton(this);
+        rb3.setText("Mute");
+        rb3.setChecked(false);
+        final RadioButton rb4 = new RadioButton(this);
+        rb4.setText("Unmute Everything");
+        rb4.setChecked(false);
+
+        final RadioGroup radioGroup = new RadioGroup(this);
+        radioGroup.addView(rb1);
+        radioGroup.addView(rb2);
+        radioGroup.addView(rb3);
+        radioGroup.addView(rb4);
+        radioGroup.setOrientation(RadioGroup.HORIZONTAL);
+        //radioGroup.setPadding(60,10,10,10);
+        radioGroup.setGravity(Gravity.CENTER);
+        radioGroup.check(rb1.getId());
+        layout.addView(radioGroup);
 
         chNew.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -729,7 +778,8 @@ public class MainActivity extends AppCompatActivity {
                         addTasktoExpList(etStr1, etStr2, etStr3, groupPos, -1);
                         db.insertData(groupPos, allTaskList.get(groupPos));
                     } else {
-                        if (allTaskList.get(groupPos).getTask().equals(etStr1)){//new step was added
+                        if (allTaskList.get(groupPos).getTask().equals(etStr1) &&
+                                (!etStr2.equals("No Action"))){     //new step was added
                             addTasktoExpList(etStr1, etStr2, etStr3, groupPos, -1);
                             newStepAdded = true;
                             db.insertStep(allTaskList.get(groupPos),
@@ -744,13 +794,18 @@ public class MainActivity extends AppCompatActivity {
                         listAdapter.notifyDataSetChanged();
                     }
 
+                    int res = radioGroup.getCheckedRadioButtonId();
+                    if (res != rb1.getId()) {
+                        setGroupMute(groupPos, res == rb2.getId(), res == rb3.getId(), res == rb4.getId());
+                    }
+
                     listAdapter.notifyDataSetChanged();
                 }
                 if (newStepAdded)setStatus(groupPos, -1);
             }
         });
 
-        alertDialogBuilder.setNeutralButton("Remove", new DialogInterface.OnClickListener() {
+        alertDialogBuilder.setNeutralButton(R.string.editRemove, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 detailsMap.remove(allTaskList.get(groupPos).getTask());
@@ -778,6 +833,18 @@ public class MainActivity extends AppCompatActivity {
         stopTimer(true);
     }
 
+    private void setGroupMute(int groupPos, boolean a1, boolean a2, boolean a3) {
+        int count = a3?allTaskList.size():groupPos+1;
+        int from = a3?0:groupPos;
+        for (int i=from; i<count; i++) {
+            for (ChildInfo child : allTaskList.get(i).getDetailsList()) {
+                child.setEnabled((a1 && (!a2)) || a3);
+                child.isNew = false;
+                child.hasError = false;
+                db.updateStep(allTaskList.get(i), child.getSequence());
+            }
+        }
+    }
 
     private void editChildDialog(final int groupPos, final int childPos){
         final ChildInfo child = allTaskList.get(groupPos).getDetailsList().get(childPos);
@@ -792,7 +859,7 @@ public class MainActivity extends AppCompatActivity {
         layout.setLayoutParams(params);
 
         layout.setGravity(Gravity.CLIP_VERTICAL);
-        layout.setPadding(10,10,10,10);
+        layout.setPadding(40,10,40,10);
         layout.setBackgroundColor(ContextCompat.getColor(getBaseContext(),
                 R.color.colorDialogLayout));
 
@@ -821,6 +888,12 @@ public class MainActivity extends AppCompatActivity {
         etTime.setInputType(InputType.TYPE_DATETIME_VARIATION_TIME | InputType.TYPE_CLASS_DATETIME);
         etTime.setText(allTaskList.get(groupPos).getDetailsList().get(childPos).getDelay());
         layout.addView(etTime);
+
+        final CheckBox chMute = new CheckBox(this);
+        chMute.setText(R.string.checkboxMute);
+        chMute.setChecked(!child.getEnabled());
+        layout.addView(chMute);
+
 
         chNew.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -862,6 +935,7 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     child.setDescription(etStr2);
                     child.setDelay(etStr3);
+                    child.setEnabled(!chMute.isChecked());
                     db.updateStep(allTaskList.get(groupPos), childPos);
                 }
                 listAdapter.notifyDataSetChanged();
@@ -940,6 +1014,15 @@ public class MainActivity extends AppCompatActivity {
                 Intent i = new Intent(this, ResourceShow.class);
                 startActivity(i);
                 break;
+
+            case R.id.savePreset:
+                String suf = new SimpleDateFormat("yyyyMMddHHmm").format(new Date());
+                createExFile("text/plain", "AP_Preset_" + suf + ".xml");
+                break;
+
+            case R.id.loadPreset:
+                getImFile();
+                break;
         }
         return true;
     }
@@ -976,4 +1059,204 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(getBaseContext(), "Backup DB Failed. " + e.toString(), Toast.LENGTH_SHORT).show();
         }
     }
+
+
+    private void createExFile(String mimeType, String fileName) {
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+
+        // Filter to only show results that can be "opened", such as
+        // a file (as opposed to a list of contacts or timezones).
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        // Create a file with the requested MIME type.
+        intent.setType(mimeType);
+        intent.putExtra(Intent.EXTRA_TITLE, fileName);
+        startActivityForResult(intent, WRITE_REQUEST_CODE);
+    }
+
+    private void getImFile() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("*/*");
+        startActivityForResult(intent, READ_REQUEST_CODE);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode,
+                                 Intent resultData) {
+
+        // The ACTION_OPEN_DOCUMENT intent was sent with the request code
+        // READ_REQUEST_CODE. If the request code seen here doesn't match, it's the
+        // response to some other intent, and the code below shouldn't run at all.
+
+        if (requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            // The document selected by the user won't be returned in the intent.
+            // Instead, a URI to that document will be contained in the return intent
+            // provided to this method as a parameter.
+            // Pull that URI using resultData.getData().
+            Uri uri = null;
+            if (resultData != null) {
+                uri = resultData.getData();
+                Log.i("xmlHelperTAG", "Uri Read: " + uri.toString());
+                readXml(uri);
+            }
+        }
+
+        if (requestCode == WRITE_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            // The document selected by the user won't be returned in the intent.
+            // Instead, a URI to that document will be contained in the return intent
+            // provided to this method as a parameter.
+            // Pull that URI using resultData.getData().
+            Uri uri = null;
+            if (resultData != null) {
+                uri = resultData.getData();
+                Log.i("xmlHelperTAG", "Uri Write: " + uri.toString());
+                writeXml(uri);
+            }
+        }
+    }
+
+    public void writeXml(Uri uri) {
+        OutputStream outs = null;
+        try {
+            outs = getContentResolver().openOutputStream(uri);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        XmlSerializer serializer = Xml.newSerializer();
+
+        try {
+            serializer.setOutput(outs, "UTF-8");
+            serializer.startDocument(null, true);
+            serializer.setFeature("http://xmlpull.org/v1/doc/features.html#indent-output", true);
+
+            serializer.startTag(null, "tasklist");
+            serializer.attribute(null, "ver", APG_PRESET_VERSION);
+
+            for (int n=0;n<allTaskList.size();n++) {
+                serializer.startTag(null, "task");
+                GroupInfo g = allTaskList.get(n);
+                serializer.attribute(null, "task", g.getTask());
+                serializer.attribute(null, "taskid", String.valueOf(g.getId()));
+
+                for (int m=0;m<g.getDetailsList().size();m++) {
+                    serializer.startTag(null, "step");
+                    ChildInfo c = g.getDetailsList().get(m);
+                    serializer.attribute(null, "seq", String.valueOf(c.getSequence()));
+                    serializer.attribute(null, "enabled", String.valueOf(c.getEnabled()));
+                    serializer.attribute(null, "delay", c.getDelay());
+                    serializer.attribute(null, "desc", c.getDescription());
+                    serializer.endTag(null, "step");
+                }
+
+                serializer.endTag(null, "task");
+            }
+
+            serializer.endTag(null, "tasklist");
+            serializer.endDocument();
+            serializer.flush();
+            if (outs != null) {
+                outs.close();
+            }
+
+        } catch (Exception e) {
+            Log.e("Exception", "Exception occurred in writing");
+        }
+    }
+
+
+    public void readXml(Uri uri) {
+        InputStream inputStream = null;
+        String task = "Task";
+        String taskid = "0";
+        String seq = "0";
+        String delay = "00:00";
+        String enabled = "true";
+        String desc = "Step";
+
+        try {
+            inputStream = getContentResolver().openInputStream(uri);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            XmlPullParser parser = factory.newPullParser();
+
+            parser.setInput(inputStream, null);
+
+            int eventType = parser.getEventType();
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+
+                String tagname = parser.getName();
+                switch (eventType) {
+                    case XmlPullParser.START_TAG:
+                        if (tagname.equalsIgnoreCase("tasklist")) {
+                            if (parser.getAttributeCount() > 0) {
+                                String ver = parser.getAttributeValue(null, "ver");
+                                if (ver.equals("1")) {
+                                    allTaskList.clear();
+                                    detailsMap.clear();
+                                } else {
+                                    Toast.makeText(this, "Preset version mismatch",
+                                            Toast.LENGTH_LONG).show();
+                                    return;
+                                }
+                            }
+
+                        }
+                        if (tagname.equalsIgnoreCase("task")) {
+                            if (parser.getAttributeCount() > 1) {
+                                task = parser.getAttributeValue(null, "task");
+                                taskid = parser.getAttributeValue(null, "taskid");
+                            }
+                        }
+
+                        if (tagname.equalsIgnoreCase("step")) {
+                            if (parser.getAttributeCount() > 3) {
+                                seq = parser.getAttributeValue(null, "seq");
+                                delay = parser.getAttributeValue(null, "delay");
+                                enabled = parser.getAttributeValue(null, "enabled");
+                                desc = parser.getAttributeValue(null, "desc");
+                            }
+                        }
+                        break;
+
+                    case XmlPullParser.TEXT:
+                        break;
+
+                    case XmlPullParser.END_TAG:
+                        if (tagname.equalsIgnoreCase("step")) {
+                            addtoList(task, desc, delay, seq, enabled);
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+                try {
+                    eventType = parser.next();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        } catch (XmlPullParserException e) {
+            e.printStackTrace();
+        }
+
+        listAdapter.notifyDataSetChanged();
+
+    }
+
+    private void addtoList(String task, String desc, String delay, String seq, String enabled) {
+        addTasktoExpList(task, desc, delay, -1, -1);
+        GroupInfo g = allTaskList.get(allTaskList.size()-1);
+        ChildInfo c = g.getDetailsList().get(g.getDetailsList().size()-1);
+        c.setEnabled(Boolean.parseBoolean(enabled));
+        c.setSequence(Integer.parseInt(seq));
+    }
+
 }

@@ -7,12 +7,26 @@
         android:id="@+id/info"
         android:icon="@android:drawable/ic_dialog_info"
         android:orderInCategory="100"
-        app:showAsAction="always"/>
+        app:showAsAction="ifRoom"/>
     <item
         android:id="@+id/menu_item_share"
-        app:showAsAction="always"
-        android:title="Share"
+        app:showAsAction="never"
+        android:title="@string/menuShare"
         app:actionProviderClass=
             "android.support.v7.widget.ShareActionProvider" />
+    <item
+        android:title="@string/menu_Save_Preset"
+        android:id="@+id/savePreset"
+        android:icon="@android:drawable/ic_dialog_info"
+        android:orderInCategory="100"
+        app:showAsAction="never"/>
+
+    <item
+        android:title="@string/menu_Load_Preset"
+        android:id="@+id/loadPreset"
+        android:icon="@android:drawable/ic_dialog_info"
+        android:orderInCategory="100"
+        app:showAsAction="never"/>
+
 </menu>
 

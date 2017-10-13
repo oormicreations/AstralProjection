@@ -5,9 +5,17 @@ public class ChildInfo {
     private int sequence = 0;
     private String description = "";
     private String delay = "";
+    boolean isEnabled = true;
     boolean hasError = false;
     boolean isNew = false;
 
+    public boolean getEnabled() {
+        return isEnabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        isEnabled = enabled;
+    }
 
     public int getSequence() {
         return sequence;

@@ -12,7 +12,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 public class DatabaseHandler extends SQLiteOpenHelper {
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
     private static final String DATABASE_NAME = "tasksManager";
     private static final String TABLE_TASKS = "tasks";
     private static final String TABLE_DETAILS = "details";
@@ -22,6 +22,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     private static final String KEY_DELAY = "delay";
     private static final String KEY_TASKID = "taskid";
     private static final String KEY_SEQ = "seq";
+    private static final String KEY_ENABLED = "enabled";
 
     public DatabaseHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -32,13 +33,20 @@ public class DatabaseHandler extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String CREATE_TASKS_TABLE = "CREATE TABLE " + TABLE_TASKS + "("
-                + KEY_ID + " INTEGER PRIMARY KEY," + KEY_NAME + " TEXT,"
+                + KEY_ID + " INTEGER PRIMARY KEY,"
+                + KEY_NAME + " TEXT,"
                 + KEY_TASKID + " INTEGER" + ")";
+
         db.execSQL(CREATE_TASKS_TABLE);
 
         String CREATE_DETAILS_TABLE = "CREATE TABLE " + TABLE_DETAILS + "("
-                + KEY_ID + " INTEGER PRIMARY KEY," + KEY_DET + " TEXT,"
-                + KEY_DELAY + " TEXT," + KEY_TASKID + " INTEGER,"  + KEY_SEQ + " INTEGER" +")";
+                + KEY_ID + " INTEGER PRIMARY KEY,"
+                + KEY_DET + " TEXT,"
+                + KEY_DELAY + " TEXT,"
+                + KEY_TASKID + " INTEGER,"
+                + KEY_SEQ + " INTEGER,"
+                + KEY_ENABLED + " INTEGER" +")";
+
         db.execSQL(CREATE_DETAILS_TABLE);
 
     }
@@ -76,6 +84,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             values.put(KEY_DELAY, cdelay);
             values.put(KEY_TASKID, task.getId());
             values.put(KEY_SEQ, n);
+            values.put(KEY_ENABLED, cinfo.getEnabled());
             db.insert(TABLE_DETAILS, null, values);
         }
 
@@ -158,6 +167,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                     ChildInfo cinfo = new ChildInfo();
                     cinfo.setDescription(cursor.getString(1));
                     cinfo.setDelay(cursor.getString(2));
+                    cinfo.setEnabled(cursor.getString(5).equals("1"));
                     childInfoArrayList.add(cinfo);
                 } while (cursor.moveToNext());
             }
@@ -204,6 +214,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_DET, task.getDetailsList().get(at).getDescription());
         values.put(KEY_DELAY, task.getDetailsList().get(at).getDelay());
         values.put(KEY_SEQ, task.getDetailsList().get(at).getSequence());
+        values.put(KEY_ENABLED, task.getDetailsList().get(at).getEnabled());
         values.put(KEY_TASKID, task.getId());
         db.insert(TABLE_DETAILS, null, values);
     }
@@ -245,6 +256,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         String tdelay = task.getDetailsList().get(pos).getDelay();
         int tid = task.getId();
         int tseq = task.getDetailsList().get(pos).getSequence();
+        boolean tenabled = task.getDetailsList().get(pos).getEnabled();
+        String senabled = tenabled?"1":"0";
 
         //db.update(TABLE_DETAILS, values, KEY_TASKID + String.format(" = %d", task.getId()), null);
         String selectQuery = "UPDATE " + TABLE_DETAILS + " SET " + KEY_DET + " = "
@@ -253,6 +266,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.execSQL(selectQuery);
         selectQuery = "UPDATE " + TABLE_DETAILS + " SET " + KEY_DELAY + " = " + "\""
                 + tdelay + "\""  + " WHERE " + KEY_TASKID + " = " + tid + " AND "
+                + KEY_SEQ + " = " + tseq;
+        db.execSQL(selectQuery);
+        selectQuery = "UPDATE " + TABLE_DETAILS + " SET " + KEY_ENABLED + " = " + "\""
+                + senabled + "\""  + " WHERE " + KEY_TASKID + " = " + tid + " AND "
                 + KEY_SEQ + " = " + tseq;
         db.execSQL(selectQuery);
     }
@@ -319,5 +336,9 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         db.delete(TABLE_TASKS, null, null);
         db.delete(TABLE_DETAILS, null, null);
         db.close ();
+    }
+
+    public int getVer() {
+        return DATABASE_VERSION;
     }
 }

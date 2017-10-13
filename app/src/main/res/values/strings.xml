@@ -25,7 +25,7 @@
     <string name="locdef">Default</string>
     <string name="srateval">Speech Rate :</string>
     <string name="sspeedval">Session Speed :</string>
-    <string name="menu_jounal_set">journalsettings</string>
+    <string name="menu_jounal_set">Delete Journal</string>
     <string name="confirmreset">Confirm Data Reset</string>
     <string name="resetmsg">All pages will be deleted. Are you sure?</string>
     <string name="resetyes">Yes</string>
@@ -37,4 +37,11 @@
     <string name="jtxt1">AP Journal Entry\nDate:&#160;</string>
     <string name="jtxt2">\n\nKeywords:&#160; \n\nDescription:&#160;</string>
     <string name="jpages">Pages</string>
+    <string name="checkboxMute">Mute</string>
+    <string name="editRemove">Remove</string>
+    <string name="btnMuteAll">Mute All</string>
+    <string name="btnUnMuteAll">Unmute All</string>
+    <string name="menu_Save_Preset">Save Preset</string>
+    <string name="menu_Load_Preset">Load Preset</string>
+    <string name="menuShare">Share</string>
 </resources>
