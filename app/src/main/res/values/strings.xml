@@ -44,4 +44,6 @@
     <string name="menu_Save_Preset">Save Preset</string>
     <string name="menu_Load_Preset">Load Preset</string>
     <string name="menuShare">Share</string>
+    <string name="endSession">Do you wish to end this session?</string>
+    <string name="confirmExit">Confirm Exit</string>
 </resources>

@@ -969,11 +969,33 @@ public class MainActivity extends AppCompatActivity {
         }
         stopTimer(true);
     }
-    protected void onPause()
+
+    @Override
+   public void onBackPressed()
     {
-        //stopTimer(false);
-        //tts.shutdown();
-        super.onPause();
+        DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case DialogInterface.BUTTON_POSITIVE:
+                        //Yes button clicked
+                        stopTimer(false);
+                        tts.shutdown();
+                        MainActivity.super.onBackPressed();
+                        break;
+
+                    case DialogInterface.BUTTON_NEGATIVE:
+                        //No button clicked
+                        break;
+                }
+            }
+        };
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle(R.string.confirmExit);
+        builder.setMessage(R.string.endSession)
+                .setPositiveButton(R.string.resetyes, dialogClickListener)
+                .setNegativeButton(R.string.resetno, dialogClickListener).show();
     }
 
     private ShareActionProvider mShareActionProvider;
@@ -1017,7 +1039,7 @@ public class MainActivity extends AppCompatActivity {
 
             case R.id.savePreset:
                 String suf = new SimpleDateFormat("yyyyMMddHHmm").format(new Date());
-                createExFile("text/plain", "AP_Preset_" + suf + ".xml");
+                createExFile("text/xml", "AP_Preset_" + suf + ".xml");
                 break;
 
             case R.id.loadPreset:
