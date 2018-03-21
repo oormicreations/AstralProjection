@@ -9,11 +9,11 @@
         android:id="@+id/heading"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingLeft="35sp"
+        android:paddingStart="35sp"
         android:paddingTop="7sp"
         android:paddingBottom="7sp"
         android:text="Heading"
         android:textAppearance="@style/TextAppearance.AppCompat.Headline"
-        android:textSize="18sp" />
+        android:textSize="16sp" />
 
 </LinearLayout>

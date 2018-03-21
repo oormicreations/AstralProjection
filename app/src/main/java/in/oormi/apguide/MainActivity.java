@@ -26,10 +26,10 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
@@ -61,16 +61,19 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.StringTokenizer;
 
 public class MainActivity extends AppCompatActivity {
 
     private static final int CURRENT_DB_VER = 2;
     private static final String APG_PRESET_VERSION = "1";
+    private static final int ACT_CHECK_TTS_DATA = 1000;
 
     private LinkedHashMap<String, GroupInfo> detailsMap = new LinkedHashMap<String, GroupInfo>();
     private ArrayList<GroupInfo> allTaskList = new ArrayList<GroupInfo>();
@@ -99,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void run() {
 
-            if (!doneSpeaking){
+            if (!doneSpeaking) {
                 //Toast.makeText(getBaseContext(), "Not Done", Toast.LENGTH_SHORT).show();
                 timerHandler.postDelayed(this, 2000); //wait 2 sec
                 return;
@@ -119,10 +122,9 @@ public class MainActivity extends AppCompatActivity {
                     carryOn = true;
                 }
             }
-            if (carryOn){
+            if (carryOn) {
                 timerHandler.postDelayed(this, getNextDelay());
-            }
-            else stopTimer(true);
+            } else stopTimer(true);
 
         }
 
@@ -134,57 +136,64 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_main);
-        final ImageView ivRay = (ImageView) findViewById(R.id.imageViewRay);
-        ivRay.setVisibility(View.INVISIBLE);
+//        final ImageView ivRay = (ImageView) findViewById(R.id.imageViewRay);
+//        ivRay.setVisibility(View.INVISIBLE);
 
 
-        if(!loadDb()) initData();
-        Toast toast = Toast.makeText(this,getString(R.string.longpress), Toast.LENGTH_SHORT );
+        if (!loadDb()) initData();
+        Toast toast = Toast.makeText(this, getString(R.string.longpress), Toast.LENGTH_SHORT);
         toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
         toast.show();
 
-        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int status) {
-                if (status == TextToSpeech.SUCCESS) {
-                    int result = tts.setLanguage(locale);
-                    if (result == TextToSpeech.LANG_MISSING_DATA ||
-                            result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                        Toast.makeText(getBaseContext(), R.string.ttserr1,
-                                Toast.LENGTH_SHORT).show();
-                    } else {
-                        tts.setSpeechRate(speechRate);
-                        tts.speak(getString(R.string.welcomeMsg),
-                                TextToSpeech.QUEUE_FLUSH, null,
-                                TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
-                    }
-                } else
-                    Toast.makeText(getBaseContext(), R.string.ttserr2,
-                            Toast.LENGTH_SHORT).show();
-            }
-        });
+        CheckTTS();
+//
+//        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+//            @Override
+//            public void onInit(int status) {
+//                if (status == TextToSpeech.SUCCESS) {
+//                    int result = tts.setLanguage(locale);
+//                    if (result == TextToSpeech.LANG_MISSING_DATA ||
+//                            result == TextToSpeech.LANG_NOT_SUPPORTED) {
+//                        Toast.makeText(getBaseContext(), R.string.ttserr1,
+//                                Toast.LENGTH_SHORT).show();
+//                    } else {
+//                        tts.setSpeechRate(speechRate);
+//                        tts.speak(getString(R.string.welcomeMsg),
+//                                TextToSpeech.QUEUE_FLUSH, null,
+//                                TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+//                    }
+//                } else
+//                    Toast.makeText(getBaseContext(), R.string.ttserr2,
+//                            Toast.LENGTH_SHORT).show();
+//            }
+//        });
 
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK |
-                PowerManager.ACQUIRE_CAUSES_WAKEUP, "APAppTag");
-        wl.acquire();
+        PowerManager.WakeLock wl = null;
+        if (pm != null) {
+            wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK |
+                    PowerManager.ACQUIRE_CAUSES_WAKEUP, "APAppTag");
+        }
+        if (wl != null) {
+            wl.acquire(10 * 60 * 1000L /*10 minutes*/);
+        }
 
-        tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
-            @Override
-            public void onStart(String utteranceId) {
-
-            }
-
-            @Override
-            public void onDone(String utteranceId) {
-                doneSpeaking = true;
-            }
-
-            @Override
-            public void onError(String utteranceId) {
-
-            }
-        });
+//        tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+//            @Override
+//            public void onStart(String utteranceId) {
+//
+//            }
+//
+//            @Override
+//            public void onDone(String utteranceId) {
+//                doneSpeaking = true;
+//            }
+//
+//            @Override
+//            public void onError(String utteranceId) {
+//
+//            }
+//        });
 
         simpleExpandableListView = (ExpandableListView) findViewById(R.id.listviewsession);
         listAdapter = new CustomAdapter(MainActivity.this, allTaskList);
@@ -252,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
                 DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        switch (which){
+                        switch (which) {
                             case DialogInterface.BUTTON_POSITIVE:
                                 //Yes button clicked
                                 stopTimer(true);
@@ -286,9 +295,9 @@ public class MainActivity extends AppCompatActivity {
 
         final ImageButton mbuttonSet = (ImageButton) findViewById(R.id.imageButtonSet);
         mbuttonSet.setOnClickListener(
-                new View.OnClickListener(){
+                new View.OnClickListener() {
                     @Override
-                    public void onClick (View view){
+                    public void onClick(View view) {
                         stopTimer(true);
                         toggle.setChecked(false);
                         editSettingDialog();
@@ -299,9 +308,9 @@ public class MainActivity extends AppCompatActivity {
 
         final ImageButton mbuttonJournal = (ImageButton) findViewById(R.id.imageButtonJournal);
         mbuttonJournal.setOnClickListener(
-                new View.OnClickListener(){
+                new View.OnClickListener() {
                     @Override
-                    public void onClick (View view){
+                    public void onClick(View view) {
                         stopTimer(true);
                         toggle.setChecked(false);
                         mbuttonJournal.startAnimation(AnimationUtils.
@@ -312,22 +321,50 @@ public class MainActivity extends AppCompatActivity {
 
         final ImageButton mbuttonEC = (ImageButton) findViewById(R.id.imageButtonEC);
         mbuttonEC.setOnClickListener(
-                new View.OnClickListener(){
+                new View.OnClickListener() {
                     @Override
-                    public void onClick (View view){
-                        if (allExp) {expandAll(); allExp = false;}
-                        else {collapseAll(); allExp = true;}
+                    public void onClick(View view) {
+                        if (allExp) {
+                            expandAll();
+                            allExp = false;
+                        } else {
+                            collapseAll();
+                            allExp = true;
+                        }
                         mbuttonEC.startAnimation(AnimationUtils.
                                 loadAnimation(MainActivity.this, R.anim.buttonpress));
                     }
                 });
 
-        mbuttonSet.setColorFilter(Color.argb(60, 200, 0, 200));
-        mbuttonJournal.setColorFilter(Color.argb(60, 200, 0, 200));
-        mbuttonEC.setColorFilter(Color.argb(60, 200, 0, 200));
-        resetButton.setColorFilter(Color.argb(60, 200, 0, 200));
+//        mbuttonSet.setColorFilter(Color.argb(60, 200, 0, 200));
+//        mbuttonJournal.setColorFilter(Color.argb(60, 200, 0, 200));
+//        mbuttonEC.setColorFilter(Color.argb(60, 200, 0, 200));
+//        resetButton.setColorFilter(Color.argb(60, 200, 0, 200));
 
     }
+
+    private void CheckTTS() {
+        // Check to see if we have TTS voice data
+        Intent ttsIntent = new Intent();
+        ttsIntent.setAction(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA);
+        startActivityForResult(ttsIntent, ACT_CHECK_TTS_DATA);
+    }
+
+//    @Override
+//    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+//        if (requestCode == ACT_CHECK_TTS_DATA) {
+//            if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+//                // Data exists
+//                ttsDataOk = true;
+//            } else {
+//                // Data is missing, so we start the TTS
+//                // installation process
+//                Intent installIntent = new Intent();
+//                installIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+//                startActivity(installIntent);
+//            }
+//        }
+//    }
 
     private void editSettingDialog() {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
@@ -340,7 +377,7 @@ public class MainActivity extends AppCompatActivity {
         layout.setLayoutParams(params);
 
         layout.setGravity(Gravity.CLIP_VERTICAL);
-        layout.setPadding(10,10,10,10);
+        layout.setPadding(10, 10, 10, 10);
         layout.setBackgroundColor(ContextCompat.getColor(getBaseContext(),
                 R.color.colorDialogLayout));
 
@@ -355,7 +392,7 @@ public class MainActivity extends AppCompatActivity {
 
         final TextView tvSesSpeed = new TextView(this);
         tvSesSpeed.setText(R.string.sspeed);
-        tvSesSpeed.setPadding(80,10,10,10);
+        tvSesSpeed.setPadding(80, 10, 10, 10);
         layout.addView(tvSesSpeed);
 
         final SeekBar sessionSpeedBar = new SeekBar(this);
@@ -365,7 +402,7 @@ public class MainActivity extends AppCompatActivity {
 
         final TextView tvSpeechRate = new TextView(this);
         tvSpeechRate.setText(R.string.srate);
-        tvSpeechRate.setPadding(80,10,10,10);
+        tvSpeechRate.setPadding(80, 10, 10, 10);
         layout.addView(tvSpeechRate);
 
         final SeekBar speechRateBar = new SeekBar(this);
@@ -375,20 +412,20 @@ public class MainActivity extends AppCompatActivity {
 
         final TextView tvVoice = new TextView(this);
         tvVoice.setText(R.string.loc);
-        tvVoice.setPadding(80,10,10,10);
+        tvVoice.setPadding(80, 10, 10, 10);
         layout.addView(tvVoice);
 
         final RadioButton rb1 = new RadioButton(this);
         rb1.setText(R.string.locdef);
         rb1.setChecked(false);
         final RadioButton rb2 = new RadioButton(this);
-        rb2.setText("EN-US");
+        rb2.setText("en_US");
         rb2.setChecked(false);
         final RadioButton rb3 = new RadioButton(this);
-        rb3.setText("EN-UK");
+        rb3.setText("en_GB");
         rb3.setChecked(false);
         final RadioButton rb4 = new RadioButton(this);
-        rb4.setText("EN-IN");
+        rb4.setText("hi_IN");
         rb4.setChecked(false);
 
         final RadioGroup radioGroup = new RadioGroup(this);
@@ -409,22 +446,25 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        alertDialogBuilder.setPositiveButton("Apply", new DialogInterface.OnClickListener() {
+        alertDialogBuilder.setPositiveButton(R.string.apply, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                sessionSpeed = (float)sessionSpeedBar.getProgress()/100.f;
-                speechRate = (float)speechRateBar.getProgress()/100.f;
-                if (sessionSpeed<0.1f) sessionSpeed = 0.1f;
-                if (speechRate<0.1f) speechRate = 0.1f;
+                sessionSpeed = (float) sessionSpeedBar.getProgress() / 100.f;
+                speechRate = (float) speechRateBar.getProgress() / 100.f;
+                if (sessionSpeed < 0.1f) sessionSpeed = 0.1f;
+                if (speechRate < 0.1f) speechRate = 0.1f;
 
                 int loc = radioGroup.getCheckedRadioButtonId();
                 if (loc == rb1.getId()) locale = Locale.getDefault();
                 if (loc == rb2.getId()) locale = Locale.US;
                 if (loc == rb3.getId()) locale = Locale.UK;
-                if (loc == rb4.getId()) locale = Locale.ENGLISH;//find out
+                if (loc == rb4.getId()) locale = Locale.forLanguageTag("hi-IN");//find out
 
-                tts.setSpeechRate(speechRate);
-                tts.setLanguage(locale);
+                if (tts != null) {
+                    tts.stop();
+                    tts.shutdown();
+                    CheckTTS();
+                }
             }
         });
 
@@ -464,15 +504,24 @@ public class MainActivity extends AppCompatActivity {
 
 
         AlertDialog edSetDialog = alertDialogBuilder.create();
-        edSetDialog.getWindow().setBackgroundDrawableResource(R.color.colorDialog);
+        Window win = edSetDialog.getWindow();
+        if (win != null) {
+            win.setBackgroundDrawableResource(R.color.colorDialog);
+        }
+
         sessionSpeedBar.setProgress((int) (sessionSpeed * 100.0f));
         speechRateBar.setProgress((int) (speechRate * 100.0f));
-        tvSpeechRate.setText(getString(R.string.srateval) + String.valueOf(speechRateBar.getProgress()) + " %");
-        tvSesSpeed.setText(getString(R.string.sspeedval) + String.valueOf(sessionSpeedBar.getProgress()) + " %");
-        if (locale == Locale.getDefault()) radioGroup.check(rb1.getId());
-        if (locale == Locale.US) radioGroup.check(rb2.getId());
-        if (locale == Locale.UK) radioGroup.check(rb3.getId());
-        if (locale == Locale.ENGLISH) radioGroup.check(rb4.getId());
+        tvSpeechRate.setText(getString(R.string.srateval)
+                + String.valueOf(speechRateBar.getProgress()) + " %");
+        tvSesSpeed.setText(getString(R.string.sspeedval)
+                + String.valueOf(sessionSpeedBar.getProgress()) + " %");
+
+        String sLoc = locale.toString();
+        radioGroup.check(rb1.getId());
+        if (sLoc.contains("en_US")) radioGroup.check(rb2.getId());
+        if (sLoc.contains("en_UK")) radioGroup.check(rb3.getId());
+        if (sLoc.contains("en_GB")) radioGroup.check(rb3.getId());
+        if (sLoc.contains("hi_IN")) radioGroup.check(rb4.getId());
 
         try {
             edSetDialog.show();
@@ -496,12 +545,18 @@ public class MainActivity extends AppCompatActivity {
             toggle.startAnimation(animation);
             animrunning = true;
 
-            final ImageView ivRay = (ImageView) findViewById(R.id.imageViewRay);
-            ivRay.setVisibility(View.VISIBLE);
-            final Animation ivAnim = AnimationUtils.loadAnimation(MainActivity.this,
-                    R.anim.rotate_around_center_point);
-            ivRay.startAnimation(ivAnim);
+//            final ImageView ivRay = (ImageView) findViewById(R.id.imageViewRay);
+//            ivRay.setVisibility(View.VISIBLE);
+//            final Animation ivAnim = AnimationUtils.loadAnimation(MainActivity.this,
+//                    R.anim.rotate_around_center_point);
+//            ivRay.startAnimation(ivAnim);
 
+        }
+
+        if (tts != null) {
+            tts.speak(getString(R.string.startSession),
+                    TextToSpeech.QUEUE_FLUSH, null,
+                    TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
         }
 
     }
@@ -517,14 +572,14 @@ public class MainActivity extends AppCompatActivity {
                 toggle.startAnimation(animation);
                 toggle.setChecked(false);
             }
-            final ImageView ivRay = (ImageView) findViewById(R.id.imageViewRay);
-            ivRay.setVisibility(View.INVISIBLE);
-            ivRay.clearAnimation();
+//            final ImageView ivRay = (ImageView) findViewById(R.id.imageViewRay);
+//            ivRay.setVisibility(View.INVISIBLE);
+//            ivRay.clearAnimation();
 
         }
     }
 
-    private void speakInstruction(){
+    private void speakInstruction() {
 /*      //useful for checking if uttered on right time
         long millis = System.currentTimeMillis() - startTime;
         int seconds = (int) (millis / 1000);
@@ -538,15 +593,17 @@ public class MainActivity extends AppCompatActivity {
         ChildInfo child = allTaskList.get(gnum).getDetailsList().get(cnum);
         doneSpeaking = !child.getEnabled();
         if (child.getEnabled()) {
-            tts.speak(child.getDescription(), TextToSpeech.QUEUE_FLUSH, null,
-                    TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+            if (child.getDescription() != null) {
+                tts.speak(child.getDescription(), TextToSpeech.QUEUE_FLUSH, null,
+                        TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+            }
         }
     }
 
     private long getNextDelay() {
         ChildInfo child = allTaskList.get(gnum).getDetailsList().get(cnum);
 
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
         Date mDate = null;
         Date mDate0 = null;
         try {
@@ -555,21 +612,26 @@ public class MainActivity extends AppCompatActivity {
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        float next = (float)(mDate.getTime() - mDate0.getTime())/sessionSpeed;
+        float next = 0;
+        if (mDate != null) {
+            if (mDate0 != null) {
+                next = (float) (mDate.getTime() - mDate0.getTime()) / sessionSpeed;
+            }
+        }
         //long kk = (long)next;
         return (long) next;
     }
 
     private void expandAll() {
         int count = listAdapter.getGroupCount();
-        for (int i = 0; i < count; i++){
+        for (int i = 0; i < count; i++) {
             simpleExpandableListView.expandGroup(i);
         }
     }
 
     private void collapseAll() {
         int count = listAdapter.getGroupCount();
-        for (int i = 0; i < count; i++){
+        for (int i = 0; i < count; i++) {
             simpleExpandableListView.collapseGroup(i);
         }
     }
@@ -611,37 +673,37 @@ public class MainActivity extends AppCompatActivity {
         for (int ntask = 0; ntask < allTaskList.size(); ntask++) {
             db.addData(allTaskList.get(ntask));
         }
-        Toast toast = Toast.makeText(this,getString(R.string.initmsg), Toast.LENGTH_SHORT );
+        Toast toast = Toast.makeText(this, getString(R.string.initmsg), Toast.LENGTH_SHORT);
         toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
         toast.show();
     }
 
-    private boolean loadDb(){
+    private boolean loadDb() {
         if (db.getVer() != CURRENT_DB_VER) return false;
         int tcount = db.getTaskCount();
-        if (tcount<1) return false;
+        if (tcount < 1) return false;
         List<GroupInfo> allTasks = db.getAllTasks();
         allTaskList.addAll(allTasks);
-        for(GroupInfo task: allTaskList) detailsMap.put(task.getTask(), task);
+        for (GroupInfo task : allTaskList) detailsMap.put(task.getTask(), task);
 
-        Toast toast = Toast.makeText(this,getString(R.string.dbmsg), Toast.LENGTH_SHORT );
+        Toast toast = Toast.makeText(this, getString(R.string.dbmsg), Toast.LENGTH_SHORT);
         toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
         toast.show();
 
         return true;
     }
 
-    private void addTasktoExpList(String taskName, String taskDetail, String delay, int at1, int at2){
+    private void addTasktoExpList(String taskName, String taskDetail, String delay, int at1, int at2) {
         //check the hash map if the group already exists
         GroupInfo task = detailsMap.get(taskName); //todo - get from db, remove the map
         //add the group if doesn't exists
-        if(task == null){
+        if (task == null) {
             task = new GroupInfo();
             task.setTask(taskName, at1);
             detailsMap.put(taskName, task);
-            if (at1>=0) allTaskList.add(at1, task);
+            if (at1 >= 0) allTaskList.add(at1, task);
             else allTaskList.add(task);
-            for (GroupInfo t: allTaskList){
+            for (GroupInfo t : allTaskList) {
                 t.setTaskId(allTaskList.indexOf(t));
             }
         }
@@ -653,32 +715,32 @@ public class MainActivity extends AppCompatActivity {
         ChildInfo detailInfo = new ChildInfo();
         detailInfo.setDescription(taskDetail);
         detailInfo.setDelay(delay);
-        if (at2>=0) detailsList.add(at2, detailInfo);
+        if (at2 >= 0) detailsList.add(at2, detailInfo);
         else detailsList.add(detailInfo);
         task.setDetailsList(detailsList);
     }
 
-    public boolean checkTime(String tstr){
+    public boolean checkTime(String tstr) {
         StringTokenizer st = new StringTokenizer(tstr, ":");
-        if( (tstr.length()<1) || (tstr.length()>8) ||
-                (!tstr.contains(":")) || (st.countTokens()>2)) return false;
+        if ((tstr.length() < 1) || (tstr.length() > 8) ||
+                (!tstr.contains(":")) || (st.countTokens() > 2)) return false;
         return true;
     }
 
-    private void setStatus(int gp, int cp){
-        for(ChildInfo ch : allTaskList.get(gp).getDetailsList()){
+    private void setStatus(int gp, int cp) {
+        for (ChildInfo ch : allTaskList.get(gp).getDetailsList()) {
             ch.hasError = false;
             ch.isNew = false;
             if (ch.getDelay().equals("00:00")) ch.hasError = true;
             if (ch.getDescription().equals("No Action")) ch.hasError = true;
         }
 
-        if (cp<0) cp = allTaskList.get(gp).getDetailsList().size() - 1;
+        if (cp < 0) cp = allTaskList.get(gp).getDetailsList().size() - 1;
         boolean enabled = allTaskList.get(gp).getDetailsList().get(cp).getEnabled();
         allTaskList.get(gp).getDetailsList().get(cp).isNew = enabled;
     }
 
-    private void editGroupDialog(final int groupPos){
+    private void editGroupDialog(final int groupPos) {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
 
         LinearLayout layout = new LinearLayout(this);
@@ -689,7 +751,7 @@ public class MainActivity extends AppCompatActivity {
         layout.setLayoutParams(params);
 
         layout.setGravity(Gravity.CLIP_VERTICAL);
-        layout.setPadding(40,10,40,10);
+        layout.setPadding(40, 10, 40, 10);
         layout.setBackgroundColor(ContextCompat.getColor(getBaseContext(),
                 R.color.colorDialogLayout));
 
@@ -718,16 +780,20 @@ public class MainActivity extends AppCompatActivity {
         layout.addView(etTime);
 
         final RadioButton rb1 = new RadioButton(this);
-        rb1.setText("As is");
+        rb1.setText(R.string.asis);
+        rb1.setTextSize(12.0f);
         rb1.setChecked(true);
         final RadioButton rb2 = new RadioButton(this);
-        rb2.setText("UnMute");
+        rb2.setText(R.string.unMute);
+        rb2.setTextSize(12.0f);
         rb2.setChecked(false);
         final RadioButton rb3 = new RadioButton(this);
-        rb3.setText("Mute");
+        rb3.setText(R.string.mute);
+        rb3.setTextSize(12.0f);
         rb3.setChecked(false);
         final RadioButton rb4 = new RadioButton(this);
-        rb4.setText("Unmute Everything");
+        rb4.setText(R.string.unmuteAll);
+        rb4.setTextSize(12.0f);
         rb4.setChecked(false);
 
         final RadioGroup radioGroup = new RadioGroup(this);
@@ -779,13 +845,12 @@ public class MainActivity extends AppCompatActivity {
                         db.insertData(groupPos, allTaskList.get(groupPos));
                     } else {
                         if (allTaskList.get(groupPos).getTask().equals(etStr1) &&
-                                (!etStr2.equals("No Action"))){     //new step was added
+                                (!etStr2.equals("No Action"))) {     //new step was added
                             addTasktoExpList(etStr1, etStr2, etStr3, groupPos, -1);
                             newStepAdded = true;
                             db.insertStep(allTaskList.get(groupPos),
                                     allTaskList.get(groupPos).getDetailsList().size() - 1);
-                        }
-                        else {//only name changed
+                        } else {//only name changed
                             detailsMap.put(etStr1,
                                     detailsMap.remove(allTaskList.get(groupPos).getTask()));
                             allTaskList.get(groupPos).setTask(etStr1, groupPos);
@@ -801,7 +866,7 @@ public class MainActivity extends AppCompatActivity {
 
                     listAdapter.notifyDataSetChanged();
                 }
-                if (newStepAdded)setStatus(groupPos, -1);
+                if (newStepAdded) setStatus(groupPos, -1);
             }
         });
 
@@ -811,11 +876,11 @@ public class MainActivity extends AppCompatActivity {
                 detailsMap.remove(allTaskList.get(groupPos).getTask());
                 db.deleteTask(groupPos, allTaskList.get(groupPos));
                 allTaskList.remove(groupPos);
-                for (int s=0; s<allTaskList.size();s++) {
+                for (int s = 0; s < allTaskList.size(); s++) {
                     allTaskList.get(s).setTaskId(s);
                 }
 
-                if (allTaskList.size()<1) {
+                if (allTaskList.size() < 1) {
                     addTasktoExpList("No Name", "No Action", "00:00", 0, -1);
                     db.insertData(0, allTaskList.get(0));
                 }
@@ -824,7 +889,11 @@ public class MainActivity extends AppCompatActivity {
         });
 
         AlertDialog edTaskDialog = alertDialogBuilder.create();
-        edTaskDialog.getWindow().setBackgroundDrawableResource(R.color.colorDialog);
+        Window win = edTaskDialog.getWindow();
+        if (win != null) {
+            win.setBackgroundDrawableResource(R.color.colorDialog);
+        }
+
         try {
             edTaskDialog.show();
         } catch (Exception e) {
@@ -834,9 +903,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setGroupMute(int groupPos, boolean a1, boolean a2, boolean a3) {
-        int count = a3?allTaskList.size():groupPos+1;
-        int from = a3?0:groupPos;
-        for (int i=from; i<count; i++) {
+        int count = a3 ? allTaskList.size() : groupPos + 1;
+        int from = a3 ? 0 : groupPos;
+        for (int i = from; i < count; i++) {
             for (ChildInfo child : allTaskList.get(i).getDetailsList()) {
                 child.setEnabled((a1 && (!a2)) || a3);
                 child.isNew = false;
@@ -846,7 +915,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void editChildDialog(final int groupPos, final int childPos){
+    private void editChildDialog(final int groupPos, final int childPos) {
         final ChildInfo child = allTaskList.get(groupPos).getDetailsList().get(childPos);
 
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
@@ -859,7 +928,7 @@ public class MainActivity extends AppCompatActivity {
         layout.setLayoutParams(params);
 
         layout.setGravity(Gravity.CLIP_VERTICAL);
-        layout.setPadding(40,10,40,10);
+        layout.setPadding(40, 10, 40, 10);
         layout.setBackgroundColor(ContextCompat.getColor(getBaseContext(),
                 R.color.colorDialogLayout));
 
@@ -950,7 +1019,7 @@ public class MainActivity extends AppCompatActivity {
                 allTaskList.get(groupPos).getDetailsList().remove(childPos);
 
                 allTaskList.get(groupPos).reSequence();
-                if (allTaskList.get(groupPos).getDetailsList().size()<1) {
+                if (allTaskList.get(groupPos).getDetailsList().size() < 1) {
                     addTasktoExpList(etGroupTitle.getText().toString(),
                             "No Action", "00:00", groupPos, -1);
                     db.insertStep(allTaskList.get(groupPos), 0);
@@ -960,7 +1029,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
         AlertDialog edStepDialog = alertDialogBuilder.create();
-        edStepDialog.getWindow().setBackgroundDrawableResource(R.color.colorDialog);
+        Window win = edStepDialog.getWindow();
+        if (win != null) {
+            win.setBackgroundDrawableResource(R.color.colorDialog);
+        }
 
         try {
             edStepDialog.show();
@@ -971,8 +1043,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-   public void onBackPressed()
-    {
+    public void onBackPressed() {
         DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -980,6 +1051,7 @@ public class MainActivity extends AppCompatActivity {
                     case DialogInterface.BUTTON_POSITIVE:
                         //Yes button clicked
                         stopTimer(false);
+                        tts.stop();
                         tts.shutdown();
                         MainActivity.super.onBackPressed();
                         break;
@@ -1009,12 +1081,11 @@ public class MainActivity extends AppCompatActivity {
         MenuItem item = menu.findItem(R.id.menu_item_share);
 
         // Fetch and store ShareActionProvider
-        mShareActionProvider = (ShareActionProvider)  MenuItemCompat.getActionProvider(item);
+        mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(item);
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.setType("text/plain");
-        shareIntent.putExtra(Intent.EXTRA_TEXT,
-                "https://play.google.com/store/apps/details?id=in.oormi.apguide");
-        shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, "Check out this app!");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.shareText));
+        shareIntent.putExtra(android.content.Intent.EXTRA_SUBJECT, getString(R.string.shareSubject));
         setShareIntent(shareIntent);
         return true;
     }
@@ -1038,7 +1109,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
 
             case R.id.savePreset:
-                String suf = new SimpleDateFormat("yyyyMMddHHmm").format(new Date());
+                String suf = new SimpleDateFormat("yyyyMMddHHmm", Locale.getDefault()).format(new Date());
                 createExFile("text/xml", "AP_Preset_" + suf + ".xml");
                 break;
 
@@ -1057,7 +1128,7 @@ public class MainActivity extends AppCompatActivity {
         startActivity(i);
     }
 
-    public void backupDB(){ //may not work
+    public void backupDB() { //may not work
         try {
             File sd = Environment.getExternalStorageDirectory();
             File data = Environment.getDataDirectory();
@@ -1119,7 +1190,9 @@ public class MainActivity extends AppCompatActivity {
             Uri uri = null;
             if (resultData != null) {
                 uri = resultData.getData();
-                Log.i("xmlHelperTAG", "Uri Read: " + uri.toString());
+                if (uri != null) {
+                    Log.i("xmlHelperTAG", "Uri Read: " + uri.toString());
+                }
                 readXml(uri);
             }
         }
@@ -1132,10 +1205,157 @@ public class MainActivity extends AppCompatActivity {
             Uri uri = null;
             if (resultData != null) {
                 uri = resultData.getData();
-                Log.i("xmlHelperTAG", "Uri Write: " + uri.toString());
+                if (uri != null) {
+                    Log.i("xmlHelperTAG", "Uri Write: " + uri.toString());
+                }
                 writeXml(uri);
             }
         }
+
+        if (requestCode == ACT_CHECK_TTS_DATA) {
+            if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
+                // Data exists
+                //Locale loc = new Locale("en");
+                //Log.i("APGuide", Arrays.toString(loc.getAvailableLocales()));
+
+                if (tts != null) {
+                    tts.stop();
+                    tts.shutdown();
+                    tts = null;
+                }
+
+                tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+                    @Override
+                    public void onInit(int status) {
+                        if (status == TextToSpeech.SUCCESS) {
+                            ArrayList<Locale> languages = new ArrayList<Locale>();
+                            Locale fallBackLocale = Locale.US;
+                            try {
+                                Set<Locale> availableLanguages = tts.getAvailableLanguages();
+                                for (Locale loc : availableLanguages) {
+                                    languages.add(loc);
+                                }
+                            } catch (NullPointerException e) {
+                                Log.e("TTSError", "Caught an exception while retrieving the list of available languages.");
+                            }
+
+                            boolean hasLang = false;
+                            boolean hasFallBackLang = false;
+                            boolean hasFallenBack = false;
+                            Locale chosenLocale = locale;
+
+                            if (languages.size() > 0) {
+                                for (int i = 0; i < languages.size(); i++) {
+                                    String dispLang = locale.toString();
+                                    if (dispLang.contains(languages.get(i).toString())) {
+                                        hasLang = true;
+                                        break;
+                                    }
+                                    if (fallBackLocale.toString().contains(languages.get(i).toString())) {
+                                        hasFallBackLang = true;
+                                    }
+                                }
+
+                                if (!hasLang) {
+                                    if (hasFallBackLang) {
+                                        locale = fallBackLocale;
+                                        hasLang = true;//has fall back lang now
+                                        hasFallenBack = true;
+                                    } else {
+                                        locale = languages.get(0); //fall back to first supported language
+                                        fallBackLocale = locale;
+                                        hasFallenBack = true;
+                                    }
+                                }
+                            } else {
+                                Toast.makeText(getBaseContext(), R.string.ttserr2,
+                                Toast.LENGTH_SHORT).show();
+                            }
+
+                            if (hasLang) {
+                                int result = tts.setLanguage(locale);
+                                if (result == TextToSpeech.LANG_MISSING_DATA ||
+                                        result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                                    Toast.makeText(getBaseContext(), R.string.ttserr1,
+                                            Toast.LENGTH_SHORT).show();
+                                } else {
+                                    tts.setSpeechRate(speechRate);
+                                    tts.speak(getString(R.string.welcomeMsg),
+                                            TextToSpeech.QUEUE_FLUSH, null,
+                                            TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+                                }
+                            }
+                            if (hasFallenBack) {
+                                //Toast.makeText(getBaseContext(), R.string.ttserr2,
+                                //Toast.LENGTH_SHORT).show();
+                                DialogInterface.OnClickListener dialogClickListener =
+                                        new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                switch (which) {
+                                                    case DialogInterface.BUTTON_POSITIVE:
+                                                        //Yes button clicked
+                                                        break;
+
+                                                    case DialogInterface.BUTTON_NEGATIVE:
+                                                        //No button clicked
+                                                        stopTimer(true);
+                                                        if (tts != null) {
+                                                            tts.stop();
+                                                            tts.shutdown();
+                                                        }
+                                                        finish();
+                                                        break;
+                                                }
+                                            }
+                                        };
+
+                                AlertDialog.Builder builder =
+                                        new AlertDialog.Builder(MainActivity.this);
+                                builder.setTitle(R.string.tts);
+                                String msgStr = getString(R.string.ttsMsg1) + chosenLocale
+                                        + getString(R.string.ttsMsg2) +
+                                        getString(R.string.ttsMsg3) + fallBackLocale.toString();
+                                builder.setMessage(msgStr)
+                                        .setPositiveButton(R.string.resetyes, dialogClickListener)
+                                        .setNegativeButton(R.string.resetno,
+                                                dialogClickListener).show();
+
+                            }
+                        }
+                    }
+                });
+
+                if (tts != null) {
+                    tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                        @Override
+                        public void onStart(String utteranceId) {
+                        }
+
+                        @Override
+                        public void onDone(String utteranceId) {
+                            doneSpeaking = true;
+                        }
+
+                        @Override
+                        public void onError(String utteranceId) {
+                        }
+                    });
+                    Log.i("APGuide", "TTS initialized");
+
+                }
+
+            } else {
+                // Data is missing, so we start the TTS
+                // installation process
+                Log.i("APGuide", "TTS data is missing");
+
+                Intent installIntent = new Intent();
+                installIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+                startActivity(installIntent);
+            }
+        }
+
     }
 
     public void writeXml(Uri uri) {
@@ -1156,13 +1376,13 @@ public class MainActivity extends AppCompatActivity {
             serializer.startTag(null, "tasklist");
             serializer.attribute(null, "ver", APG_PRESET_VERSION);
 
-            for (int n=0;n<allTaskList.size();n++) {
+            for (int n = 0; n < allTaskList.size(); n++) {
                 serializer.startTag(null, "task");
                 GroupInfo g = allTaskList.get(n);
                 serializer.attribute(null, "task", g.getTask());
                 serializer.attribute(null, "taskid", String.valueOf(g.getId()));
 
-                for (int m=0;m<g.getDetailsList().size();m++) {
+                for (int m = 0; m < g.getDetailsList().size(); m++) {
                     serializer.startTag(null, "step");
                     ChildInfo c = g.getDetailsList().get(m);
                     serializer.attribute(null, "seq", String.valueOf(c.getSequence()));
@@ -1275,8 +1495,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void addtoList(String task, String desc, String delay, String seq, String enabled) {
         addTasktoExpList(task, desc, delay, -1, -1);
-        GroupInfo g = allTaskList.get(allTaskList.size()-1);
-        ChildInfo c = g.getDetailsList().get(g.getDetailsList().size()-1);
+        GroupInfo g = allTaskList.get(allTaskList.size() - 1);
+        ChildInfo c = g.getDetailsList().get(g.getDetailsList().size() - 1);
         c.setEnabled(Boolean.parseBoolean(enabled));
         c.setSequence(Integer.parseInt(seq));
     }

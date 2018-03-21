@@ -20,9 +20,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ResourceShow" />
+        <activity android:name=".ResourceShow"
+            android:parentActivityName=".MainActivity"/>
+
         <activity android:name=".JournalActivity"
-            android:windowSoftInputMode="adjustPan">
+            android:windowSoftInputMode="adjustPan"
+            android:parentActivityName=".MainActivity">
         </activity>
     </application>
 

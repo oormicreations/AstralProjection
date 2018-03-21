@@ -15,6 +15,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Locale;
 
 public class CustomAdapter extends BaseExpandableListAdapter {
 
@@ -46,15 +47,18 @@ public class CustomAdapter extends BaseExpandableListAdapter {
         //if (view == null) { //do not reuse views, it messes up colored backgrounds
             LayoutInflater infalInflater =
                     (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        if (infalInflater != null) {
             view = infalInflater.inflate(R.layout.child_items, null);
+        }
         //}
 
         TextView sequence = (TextView) view.findViewById(R.id.sequence);
-        sequence.setText(String.format("%02d. ", 1 + detailInfo.getSequence()));
+        sequence.setText(String.format(Locale.getDefault(),"%02d. ", 1
+                + detailInfo.getSequence()));
 
         Chronometer cm = (Chronometer) view.findViewById(R.id.chronometer2);
         //cm.setFormat("Time (%s)");
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
         Date mDate = null;
         Date mDate0 = null;
         try {
@@ -63,7 +67,12 @@ public class CustomAdapter extends BaseExpandableListAdapter {
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        long timeInMilliseconds = mDate.getTime() - mDate0.getTime();
+        long timeInMilliseconds = 0;
+        if (mDate != null) {
+            if (mDate0 != null) {
+                timeInMilliseconds = mDate.getTime() - mDate0.getTime();
+            }
+        }
         cm.setBase(SystemClock.elapsedRealtime() - timeInMilliseconds);
         cm.setTextColor(Color.rgb(0,127,0));
 
@@ -127,7 +136,9 @@ public class CustomAdapter extends BaseExpandableListAdapter {
         //if (view == null) {
             LayoutInflater inf =
                     (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        if (inf != null) {
             view = inf.inflate(R.layout.group_items, null);
+        }
         //}
 
         TextView heading = (TextView) view.findViewById(R.id.heading);

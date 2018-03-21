@@ -21,6 +21,7 @@ import android.widget.TextView;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 public class JournalActivity extends AppCompatActivity {
     EditText editPage;
@@ -99,16 +100,16 @@ public class JournalActivity extends AppCompatActivity {
                     }
                 });
 
-        mbuttonJournalNew.setColorFilter(Color.argb(50, 255, 0, 200));
-        mbuttonJournalNext.setColorFilter(Color.argb(50, 255, 0, 200));
-        mbuttonJournalPrevious.setColorFilter(Color.argb(50, 255, 0, 200));
-        mbuttonJournalDelete.setColorFilter(Color.argb(50, 255, 0, 200));
+//        mbuttonJournalNew.setColorFilter(Color.argb(50, 255, 0, 200));
+//        mbuttonJournalNext.setColorFilter(Color.argb(50, 255, 0, 200));
+//        mbuttonJournalPrevious.setColorFilter(Color.argb(50, 255, 0, 200));
+//        mbuttonJournalDelete.setColorFilter(Color.argb(50, 255, 0, 200));
 
     }
 
     private void newPage() {
         savePage();
-        journalDate = new SimpleDateFormat("yyyy/MM/dd HH:mm").format(new Date());
+        journalDate = new SimpleDateFormat("yyyy/MM/dd HH:mm", Locale.getDefault()).format(new Date());
         newText = getString(R.string.jtxt1) + journalDate + getString(R.string.jtxt2);
         editPage.setText(newText);
         editPage.setSelection(editPage.getText().length()-15);
