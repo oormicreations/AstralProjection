@@ -63,4 +63,6 @@
     <string name="journal">Journal</string>
     <string name="expand_toggle">Expand Toggle</string>
     <string name="shareText">Hi!\n\nYou may like to check out this awesome app for help in your Astral Projection practice:\n\n  https://play.google.com/store/apps/details?id=in.oormi.apguide   \n\nSee you in Astral plane soon!\n\n</string>
+    <string name="ttsErrMsg">Text to speech could not be initialized. Please try choosing another Text to speech engine in Android Text to speech Settings.</string>
+    <string name="ttsErrTitle">Text to speech error</string>
 </resources>

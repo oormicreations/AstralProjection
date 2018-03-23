@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -35,7 +34,6 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
@@ -61,12 +59,10 @@ import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import java.util.StringTokenizer;
 
 public class MainActivity extends AppCompatActivity {
@@ -87,8 +83,6 @@ public class MainActivity extends AppCompatActivity {
     int gnum = 0;
     int cnum = 0;
     TextToSpeech tts;
-    float speechRate = 0.85f;
-    Locale locale = Locale.getDefault();
     boolean doneSpeaking = true;
     float sessionSpeed = 1.0f;
 
@@ -136,9 +130,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         setContentView(R.layout.activity_main);
-//        final ImageView ivRay = (ImageView) findViewById(R.id.imageViewRay);
-//        ivRay.setVisibility(View.INVISIBLE);
-
 
         if (!loadDb()) initData();
         Toast toast = Toast.makeText(this, getString(R.string.longpress), Toast.LENGTH_SHORT);
@@ -146,27 +137,6 @@ public class MainActivity extends AppCompatActivity {
         toast.show();
 
         CheckTTS();
-//
-//        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
-//            @Override
-//            public void onInit(int status) {
-//                if (status == TextToSpeech.SUCCESS) {
-//                    int result = tts.setLanguage(locale);
-//                    if (result == TextToSpeech.LANG_MISSING_DATA ||
-//                            result == TextToSpeech.LANG_NOT_SUPPORTED) {
-//                        Toast.makeText(getBaseContext(), R.string.ttserr1,
-//                                Toast.LENGTH_SHORT).show();
-//                    } else {
-//                        tts.setSpeechRate(speechRate);
-//                        tts.speak(getString(R.string.welcomeMsg),
-//                                TextToSpeech.QUEUE_FLUSH, null,
-//                                TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
-//                    }
-//                } else
-//                    Toast.makeText(getBaseContext(), R.string.ttserr2,
-//                            Toast.LENGTH_SHORT).show();
-//            }
-//        });
 
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         PowerManager.WakeLock wl = null;
@@ -177,23 +147,6 @@ public class MainActivity extends AppCompatActivity {
         if (wl != null) {
             wl.acquire(10 * 60 * 1000L /*10 minutes*/);
         }
-
-//        tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
-//            @Override
-//            public void onStart(String utteranceId) {
-//
-//            }
-//
-//            @Override
-//            public void onDone(String utteranceId) {
-//                doneSpeaking = true;
-//            }
-//
-//            @Override
-//            public void onError(String utteranceId) {
-//
-//            }
-//        });
 
         simpleExpandableListView = (ExpandableListView) findViewById(R.id.listviewsession);
         listAdapter = new CustomAdapter(MainActivity.this, allTaskList);
@@ -400,46 +353,6 @@ public class MainActivity extends AppCompatActivity {
         sessionSpeedBar.setProgress(100);
         layout.addView(sessionSpeedBar);
 
-        final TextView tvSpeechRate = new TextView(this);
-        tvSpeechRate.setText(R.string.srate);
-        tvSpeechRate.setPadding(80, 10, 10, 10);
-        layout.addView(tvSpeechRate);
-
-        final SeekBar speechRateBar = new SeekBar(this);
-        speechRateBar.setMax(200);
-        speechRateBar.setProgress(85);
-        layout.addView(speechRateBar);
-
-        final TextView tvVoice = new TextView(this);
-        tvVoice.setText(R.string.loc);
-        tvVoice.setPadding(80, 10, 10, 10);
-        layout.addView(tvVoice);
-
-        final RadioButton rb1 = new RadioButton(this);
-        rb1.setText(R.string.locdef);
-        rb1.setChecked(false);
-        final RadioButton rb2 = new RadioButton(this);
-        rb2.setText("en_US");
-        rb2.setChecked(false);
-        final RadioButton rb3 = new RadioButton(this);
-        rb3.setText("en_GB");
-        rb3.setChecked(false);
-        final RadioButton rb4 = new RadioButton(this);
-        rb4.setText("hi_IN");
-        rb4.setChecked(false);
-
-        final RadioGroup radioGroup = new RadioGroup(this);
-        radioGroup.addView(rb1);
-        radioGroup.addView(rb2);
-        radioGroup.addView(rb3);
-        radioGroup.addView(rb4);
-        radioGroup.setOrientation(RadioGroup.HORIZONTAL);
-        //radioGroup.setPadding(60,10,10,10);
-        radioGroup.setGravity(Gravity.CENTER);
-        radioGroup.check(rb1.getId());
-        layout.addView(radioGroup);
-
-
         alertDialogBuilder.setNegativeButton(R.string.editCancel, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 dialog.cancel();
@@ -450,21 +363,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 sessionSpeed = (float) sessionSpeedBar.getProgress() / 100.f;
-                speechRate = (float) speechRateBar.getProgress() / 100.f;
                 if (sessionSpeed < 0.1f) sessionSpeed = 0.1f;
-                if (speechRate < 0.1f) speechRate = 0.1f;
-
-                int loc = radioGroup.getCheckedRadioButtonId();
-                if (loc == rb1.getId()) locale = Locale.getDefault();
-                if (loc == rb2.getId()) locale = Locale.US;
-                if (loc == rb3.getId()) locale = Locale.UK;
-                if (loc == rb4.getId()) locale = Locale.forLanguageTag("hi-IN");//find out
-
-                if (tts != null) {
-                    tts.stop();
-                    tts.shutdown();
-                    CheckTTS();
-                }
             }
         });
 
@@ -485,24 +384,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        speechRateBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                tvSpeechRate.setText(getString(R.string.srateval) + String.valueOf(progress) + " %");
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-
-
         AlertDialog edSetDialog = alertDialogBuilder.create();
         Window win = edSetDialog.getWindow();
         if (win != null) {
@@ -510,18 +391,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         sessionSpeedBar.setProgress((int) (sessionSpeed * 100.0f));
-        speechRateBar.setProgress((int) (speechRate * 100.0f));
-        tvSpeechRate.setText(getString(R.string.srateval)
-                + String.valueOf(speechRateBar.getProgress()) + " %");
         tvSesSpeed.setText(getString(R.string.sspeedval)
                 + String.valueOf(sessionSpeedBar.getProgress()) + " %");
-
-        String sLoc = locale.toString();
-        radioGroup.check(rb1.getId());
-        if (sLoc.contains("en_US")) radioGroup.check(rb2.getId());
-        if (sLoc.contains("en_UK")) radioGroup.check(rb3.getId());
-        if (sLoc.contains("en_GB")) radioGroup.check(rb3.getId());
-        if (sLoc.contains("hi_IN")) radioGroup.check(rb4.getId());
 
         try {
             edSetDialog.show();
@@ -545,12 +416,6 @@ public class MainActivity extends AppCompatActivity {
             toggle.startAnimation(animation);
             animrunning = true;
 
-//            final ImageView ivRay = (ImageView) findViewById(R.id.imageViewRay);
-//            ivRay.setVisibility(View.VISIBLE);
-//            final Animation ivAnim = AnimationUtils.loadAnimation(MainActivity.this,
-//                    R.anim.rotate_around_center_point);
-//            ivRay.startAnimation(ivAnim);
-
         }
 
         if (tts != null) {
@@ -562,7 +427,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void stopTimer(boolean stopanim) {
-        tts.stop();
+        if (tts != null) {
+            tts.stop();
+        }
         timerHandler.removeCallbacks(timerRunnable);
         if (stopanim) {
             final ToggleButton toggle = (ToggleButton) findViewById(R.id.toggleButtonStartStop);
@@ -572,10 +439,6 @@ public class MainActivity extends AppCompatActivity {
                 toggle.startAnimation(animation);
                 toggle.setChecked(false);
             }
-//            final ImageView ivRay = (ImageView) findViewById(R.id.imageViewRay);
-//            ivRay.setVisibility(View.INVISIBLE);
-//            ivRay.clearAnimation();
-
         }
     }
 
@@ -594,8 +457,10 @@ public class MainActivity extends AppCompatActivity {
         doneSpeaking = !child.getEnabled();
         if (child.getEnabled()) {
             if (child.getDescription() != null) {
-                tts.speak(child.getDescription(), TextToSpeech.QUEUE_FLUSH, null,
-                        TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+                if (tts != null) {
+                    tts.speak(child.getDescription(), TextToSpeech.QUEUE_FLUSH, null,
+                            TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+                }
             }
         }
     }
@@ -1051,8 +916,10 @@ public class MainActivity extends AppCompatActivity {
                     case DialogInterface.BUTTON_POSITIVE:
                         //Yes button clicked
                         stopTimer(false);
-                        tts.stop();
-                        tts.shutdown();
+                        if(tts!=null) {
+                            tts.stop();
+                            tts.shutdown();
+                        }
                         MainActivity.super.onBackPressed();
                         break;
 
@@ -1215,115 +1082,42 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == ACT_CHECK_TTS_DATA) {
             if (resultCode == TextToSpeech.Engine.CHECK_VOICE_DATA_PASS) {
                 // Data exists
-                //Locale loc = new Locale("en");
-                //Log.i("APGuide", Arrays.toString(loc.getAvailableLocales()));
-
                 if (tts != null) {
                     tts.stop();
                     tts.shutdown();
                     tts = null;
                 }
 
-                tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+                tts = new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
                     @Override
                     public void onInit(int status) {
                         if (status == TextToSpeech.SUCCESS) {
-                            ArrayList<Locale> languages = new ArrayList<Locale>();
-                            Locale fallBackLocale = Locale.US;
-                            try {
-                                Set<Locale> availableLanguages = tts.getAvailableLanguages();
-                                for (Locale loc : availableLanguages) {
-                                    languages.add(loc);
-                                }
-                            } catch (NullPointerException e) {
-                                Log.e("TTSError", "Caught an exception while retrieving the list of available languages.");
-                            }
-
-                            boolean hasLang = false;
-                            boolean hasFallBackLang = false;
-                            boolean hasFallenBack = false;
-                            Locale chosenLocale = locale;
-
-                            if (languages.size() > 0) {
-                                for (int i = 0; i < languages.size(); i++) {
-                                    String dispLang = locale.toString();
-                                    if (dispLang.contains(languages.get(i).toString())) {
-                                        hasLang = true;
-                                        break;
-                                    }
-                                    if (fallBackLocale.toString().contains(languages.get(i).toString())) {
-                                        hasFallBackLang = true;
-                                    }
-                                }
-
-                                if (!hasLang) {
-                                    if (hasFallBackLang) {
-                                        locale = fallBackLocale;
-                                        hasLang = true;//has fall back lang now
-                                        hasFallenBack = true;
-                                    } else {
-                                        locale = languages.get(0); //fall back to first supported language
-                                        fallBackLocale = locale;
-                                        hasFallenBack = true;
-                                    }
-                                }
-                            } else {
-                                Toast.makeText(getBaseContext(), R.string.ttserr2,
-                                Toast.LENGTH_SHORT).show();
-                            }
-
-                            if (hasLang) {
-                                int result = tts.setLanguage(locale);
-                                if (result == TextToSpeech.LANG_MISSING_DATA ||
-                                        result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                                    Toast.makeText(getBaseContext(), R.string.ttserr1,
-                                            Toast.LENGTH_SHORT).show();
-                                } else {
-                                    tts.setSpeechRate(speechRate);
-                                    tts.speak(getString(R.string.welcomeMsg),
-                                            TextToSpeech.QUEUE_FLUSH, null,
-                                            TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
-                                }
-                            }
-                            if (hasFallenBack) {
-                                //Toast.makeText(getBaseContext(), R.string.ttserr2,
-                                //Toast.LENGTH_SHORT).show();
-                                DialogInterface.OnClickListener dialogClickListener =
-                                        new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                switch (which) {
-                                                    case DialogInterface.BUTTON_POSITIVE:
-                                                        //Yes button clicked
-                                                        break;
-
-                                                    case DialogInterface.BUTTON_NEGATIVE:
-                                                        //No button clicked
-                                                        stopTimer(true);
-                                                        if (tts != null) {
-                                                            tts.stop();
-                                                            tts.shutdown();
-                                                        }
-                                                        finish();
-                                                        break;
-                                                }
+                            tts.speak(getString(R.string.welcomeMsg),
+                                    TextToSpeech.QUEUE_FLUSH, null,
+                                    TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
+                        } else {
+                            DialogInterface.OnClickListener dialogClickListener =
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            switch (which) {
+                                                case DialogInterface.BUTTON_POSITIVE:
+                                                    break;
+                                                case DialogInterface.BUTTON_NEGATIVE:
+                                                    break;
                                             }
-                                        };
+                                        }
+                                    };
 
-                                AlertDialog.Builder builder =
-                                        new AlertDialog.Builder(MainActivity.this);
-                                builder.setTitle(R.string.tts);
-                                String msgStr = getString(R.string.ttsMsg1) + chosenLocale
-                                        + getString(R.string.ttsMsg2) +
-                                        getString(R.string.ttsMsg3) + fallBackLocale.toString();
-                                builder.setMessage(msgStr)
-                                        .setPositiveButton(R.string.resetyes, dialogClickListener)
-                                        .setNegativeButton(R.string.resetno,
-                                                dialogClickListener).show();
-
-                            }
+                            AlertDialog.Builder builder =
+                                    new AlertDialog.Builder(MainActivity.this);
+                            builder.setTitle(R.string.ttsErrTitle);
+                            builder.setMessage(R.string.ttsErrMsg)
+                                    .setPositiveButton("Ok", dialogClickListener)
+                                    .setNegativeButton("Cancel", dialogClickListener).show();
                         }
                     }
+
                 });
 
                 if (tts != null) {
@@ -1346,8 +1140,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
             } else {
-                // Data is missing, so we start the TTS
-                // installation process
+                // Data is missing, so we start the TTS installation process
                 Log.i("APGuide", "TTS data is missing");
 
                 Intent installIntent = new Intent();

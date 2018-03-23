@@ -116,6 +116,7 @@ public class JournalActivity extends AppCompatActivity {
         isNewPage = true;
         nPage = totalPages + 1;
         tvMsg.setText(getString(R.string.jnew) + String.valueOf(totalPages));
+        editPage.setEnabled(isNewPage);
     }
 
     private void showPage() {
@@ -129,6 +130,7 @@ public class JournalActivity extends AppCompatActivity {
         editPage.setText(jdb.getPage(nPage));
         isNewPage = false;
         tvMsg.setText("Page " + String.valueOf(nPage) + " of " + totalPages);
+        editPage.setEnabled(isNewPage);
     }
 
     private void delPage() {
@@ -218,6 +220,10 @@ public class JournalActivity extends AppCompatActivity {
                 builder.setMessage(R.string.resetmsg)
                         .setPositiveButton(R.string.resetyes, dialogClickListener)
                         .setNegativeButton(R.string.resetno, dialogClickListener).show();
+                break;
+
+            case android.R.id.home:
+                onBackPressed();
                 break;
         }
 
