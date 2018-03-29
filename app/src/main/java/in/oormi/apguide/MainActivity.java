@@ -86,6 +86,10 @@ public class MainActivity extends AppCompatActivity {
     boolean doneSpeaking = true;
     float sessionSpeed = 1.0f;
 
+    PowerManager pm;
+    PowerManager.WakeLock wl;
+
+
     private static final int READ_REQUEST_CODE = 1042;
     private static final int WRITE_REQUEST_CODE = 1043;
 
@@ -138,15 +142,6 @@ public class MainActivity extends AppCompatActivity {
 
         CheckTTS();
 
-        PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        PowerManager.WakeLock wl = null;
-        if (pm != null) {
-            wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK |
-                    PowerManager.ACQUIRE_CAUSES_WAKEUP, "APAppTag");
-        }
-        if (wl != null) {
-            wl.acquire(10 * 60 * 1000L /*10 minutes*/);
-        }
 
         simpleExpandableListView = (ExpandableListView) findViewById(R.id.listviewsession);
         listAdapter = new CustomAdapter(MainActivity.this, allTaskList);
@@ -424,6 +419,16 @@ public class MainActivity extends AppCompatActivity {
                     TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID);
         }
 
+        pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+        wl = null;
+        if (pm != null) {
+            wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK |
+                    PowerManager.ACQUIRE_CAUSES_WAKEUP, "APAppTag");
+        }
+        if (wl != null) {
+            wl.acquire(120 * 60 * 1000L /*120 minutes*/);
+        }
+
     }
 
     private void stopTimer(boolean stopanim) {
@@ -440,6 +445,13 @@ public class MainActivity extends AppCompatActivity {
                 toggle.setChecked(false);
             }
         }
+
+        if (wl!=null) {
+            if (wl.isHeld()) wl.release();
+            wl = null;
+            pm = null;
+        }
+
     }
 
     private void speakInstruction() {
@@ -916,10 +928,12 @@ public class MainActivity extends AppCompatActivity {
                     case DialogInterface.BUTTON_POSITIVE:
                         //Yes button clicked
                         stopTimer(false);
-                        if(tts!=null) {
+                        if (tts != null) {
                             tts.stop();
                             tts.shutdown();
                         }
+
+
                         MainActivity.super.onBackPressed();
                         break;
 
